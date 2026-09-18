@@ -3,8 +3,8 @@ import type { FC } from 'react'
 import React, { useEffect, useRef } from 'react'
 import cn from 'classnames'
 import { useTranslation } from 'react-i18next'
+import { RiSendPlane2Fill } from '@remixicon/react'
 import Textarea from 'rc-textarea'
-import s from './style.module.css'
 import Answer from './answer'
 import Question from './question'
 import type { FeedbackFunc } from './type'
@@ -15,7 +15,7 @@ import Toast from '@/app/components/base/toast'
 import ChatImageUploader from '@/app/components/base/image-uploader/chat-image-uploader'
 import ImageList from '@/app/components/base/image-uploader/image-list'
 import { useImageFiles } from '@/app/components/base/image-uploader/hooks'
-import FileUploaderInAttachmentWrapper from '@/app/components/base/file-uploader-in-attachment'
+import { FileUploaderAttachment, FileUploaderFileList, FileUploaderTrigger } from '@/app/components/base/file-uploader-in-attachment'
 import type { FileEntity, FileUpload } from '@/app/components/base/file-uploader-in-attachment/types'
 import { getProcessedFiles } from '@/app/components/base/file-uploader-in-attachment/utils'
 
@@ -109,6 +109,9 @@ const Chat: FC<IChatProps> = ({
       transfer_method: fileItem.type,
       url: fileItem.url,
       upload_file_id: fileItem.fileId,
+      // client-only fields, used to render the attachment inside the message bubble
+      base64_url: fileItem.base64Url,
+      name: fileItem.file?.name,
     }))
     const docAndOtherFiles: VisionFile[] = getProcessedFiles(attachmentFiles)
     const combinedFiles: VisionFile[] = [...imageFiles, ...docAndOtherFiles]
@@ -147,10 +150,13 @@ const Chat: FC<IChatProps> = ({
     handleSend()
   }
 
+  const canSubmit = query.trim().length > 0
+  const hasAttachments = (!!visionConfig?.enabled && files.length > 0) || (!!fileConfig?.enabled && attachmentFiles.length > 0)
+
   return (
-    <div className={cn(!feedbackDisabled && 'px-3.5', 'h-full')}>
+    <div className={cn('h-full flex flex-col')}>
       {/* Chat List */}
-      <div className="h-full space-y-[30px]">
+      <div className="flex-1 space-y-6">
         {chatList.map((item) => {
           if (item.isAnswer) {
             const isLast = item.id === chatList[chatList.length - 1].id
@@ -169,76 +175,107 @@ const Chat: FC<IChatProps> = ({
               id={item.id}
               content={item.content}
               useCurrentUserAvatar={useCurrentUserAvatar}
-              imgSrcs={(item.message_files && item.message_files?.length > 0) ? item.message_files.map(item => item.url) : []}
+              files={item.message_files}
             />
           )
         })}
       </div>
       {
         !isHideSendInput && (
-          <div className='fixed z-10 bottom-0 left-1/2 transform -translate-x-1/2 pc:ml-[122px] tablet:ml-[96px] mobile:ml-0 pc:w-[794px] tablet:w-[794px] max-w-full mobile:w-full px-3.5'>
-            <div className='p-[5.5px] max-h-[150px] bg-white border-[1.5px] border-gray-200 rounded-xl overflow-y-auto'>
-              {
-                visionConfig?.enabled && (
-                  <>
-                    <div className='absolute bottom-2 left-2 flex items-center'>
-                      <ChatImageUploader
-                        settings={visionConfig}
-                        onUpload={onUpload}
-                        disabled={files.length >= visionConfig.number_limits}
-                      />
-                      <div className='mx-1 w-[1px] h-4 bg-black/5' />
+          <FileUploaderAttachment
+            value={attachmentFiles}
+            onChange={setAttachmentFiles}
+          >
+            <div className='sticky bottom-0 z-10 mt-4 pb-3 bg-gradient-to-t from-white via-white to-transparent'>
+              <div className='rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow focus-within:border-gray-300 focus-within:shadow-md'>
+                {/* attachments */}
+                {
+                  hasAttachments && (
+                    <div className='space-y-1.5 px-2 pt-2'>
+                      {
+                        !!visionConfig?.enabled && files.length > 0 && (
+                          <ImageList
+                            list={files}
+                            onRemove={onRemove}
+                            onReUpload={onReUpload}
+                            onImageLinkLoadSuccess={onImageLinkLoadSuccess}
+                            onImageLinkLoadError={onImageLinkLoadError}
+                          />
+                        )
+                      }
+                      {
+                        !!fileConfig?.enabled && (
+                          <FileUploaderFileList fileConfig={fileConfig} />
+                        )
+                      }
                     </div>
-                    <div className='pl-[52px]'>
-                      <ImageList
-                        list={files}
-                        onRemove={onRemove}
-                        onReUpload={onReUpload}
-                        onImageLinkLoadSuccess={onImageLinkLoadSuccess}
-                        onImageLinkLoadError={onImageLinkLoadError}
-                      />
-                    </div>
-                  </>
-                )
-              }
-              {
-                fileConfig?.enabled && (
-                  <div className={`${visionConfig?.enabled ? 'pl-[52px]' : ''} mb-1`}>
-                    <FileUploaderInAttachmentWrapper
-                      fileConfig={fileConfig}
-                      value={attachmentFiles}
-                      onChange={setAttachmentFiles}
-                    />
+                  )
+                }
+                <div className='max-h-[150px] overflow-y-auto'>
+                  <Textarea
+                    className='block w-full resize-none appearance-none bg-transparent px-3 py-2.5 text-base leading-6 text-gray-700 outline-none max-h-none placeholder:text-gray-400'
+                    value={query}
+                    onChange={handleContentChange}
+                    onKeyUp={handleKeyUp}
+                    onKeyDown={handleKeyDown}
+                    placeholder={t('app.chat.inputPlaceholder') || ''}
+                    autoSize
+                  />
+                </div>
+                {/* toolbar */}
+                <div className='flex items-center justify-between gap-2 px-2 pb-2'>
+                  <div className='flex items-center gap-0.5'>
+                    {
+                      !!visionConfig?.enabled && (
+                        <ChatImageUploader
+                          settings={visionConfig}
+                          onUpload={onUpload}
+                          disabled={files.length >= visionConfig.number_limits}
+                        />
+                      )
+                    }
+                    {
+                      !!fileConfig?.enabled && (
+                        <FileUploaderTrigger
+                          fileConfig={fileConfig}
+                          variant='compact'
+                        />
+                      )
+                    }
                   </div>
-                )
-              }
-              <Textarea
-                className={`
-                  block w-full px-2 pr-[118px] py-[7px] leading-5 max-h-none text-base text-gray-700 outline-none appearance-none resize-none
-                  ${visionConfig?.enabled && 'pl-12'}
-                `}
-                value={query}
-                onChange={handleContentChange}
-                onKeyUp={handleKeyUp}
-                onKeyDown={handleKeyDown}
-                autoSize
-              />
-              <div className="absolute bottom-2 right-6 flex items-center h-8">
-                <div className={`${s.count} mr-3 h-5 leading-5 text-sm bg-gray-50 text-gray-500 px-2 rounded`}>{query.trim().length}</div>
-                <Tooltip
-                  selector='send-tip'
-                  htmlContent={
-                    <div>
-                      <div>{t('common.operation.send')} Enter</div>
-                      <div>{t('common.operation.lineBreak')} Shift Enter</div>
-                    </div>
-                  }
-                >
-                  <div className={`${s.sendBtn} w-8 h-8 cursor-pointer rounded-md`} onClick={handleSend}></div>
-                </Tooltip>
+                  <div className='flex items-center gap-2'>
+                    {
+                      canSubmit && (
+                        <span className='select-none text-xs tabular-nums text-gray-400'>{query.trim().length}</span>
+                      )
+                    }
+                    <Tooltip
+                      selector='send-tip'
+                      htmlContent={
+                        <div>
+                          <div>{t('common.operation.send')} Enter</div>
+                          <div>{t('common.operation.lineBreak')} Shift Enter</div>
+                        </div>
+                      }
+                    >
+                      <button
+                        type='button'
+                        className={cn(
+                          'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors',
+                          canSubmit
+                            ? 'cursor-pointer bg-primary-600 text-white hover:bg-primary-700'
+                            : 'cursor-default bg-gray-100 text-gray-400',
+                        )}
+                        onClick={handleSend}
+                      >
+                        <RiSendPlane2Fill className='h-4 w-4' />
+                      </button>
+                    </Tooltip>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          </FileUploaderAttachment>
         )
       }
     </div>

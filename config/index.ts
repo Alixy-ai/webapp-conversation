@@ -19,3 +19,13 @@ export const API_PREFIX = '/api'
 export const LOCALE_COOKIE_NAME = 'locale'
 
 export const DEFAULT_VALUE_MAX_LEN = 48
+
+// ── Branding ────────────────────────────────────────────────────────────────
+// Avatar shown in the header and used as the browser tab icon as well.
+// Accepts an emoji ('🤖'), a file in /public ('/logo.png') or an absolute URL.
+// Leave it empty to hide both the header avatar and the tab icon.
+export const appIcon = ''
+// Background of the avatar, any CSS color (e.g. '#EFF1F5'). Only used for emojis.
+export const appIconBackground = ''
+// Show the "Powered by Dify" link at the bottom of the welcome card.
+export const isShowPoweredBy = false

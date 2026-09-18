@@ -102,6 +102,10 @@ export const getProcessedFiles = (files: FileEntity[]) => {
     transfer_method: fileItem.transferMethod,
     url: fileItem.url || '',
     upload_file_id: fileItem.uploadedId || '',
+    // client-only fields, used to render the attachment inside the message bubble
+    base64_url: fileItem.base64Url,
+    name: fileItem.name,
+    size: fileItem.size,
   }))
 }
 

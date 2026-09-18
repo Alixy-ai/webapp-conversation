@@ -19,13 +19,24 @@ import useBreakpoints, { MediaType } from '@/hooks/use-breakpoints'
 import Loading from '@/app/components/base/loading'
 import { replaceVarWithValues, userInputsFormToPromptVariables } from '@/utils/prompt'
 import AppUnavailable from '@/app/components/app-unavailable'
-import { API_KEY, APP_ID, APP_INFO, isShowPrompt, promptTemplate } from '@/config'
+import { API_KEY, API_PREFIX, APP_ID, APP_INFO, isShowPrompt, promptTemplate } from '@/config'
 import type { Annotation as AnnotationType } from '@/types/log'
 import { addFileInfos, sortAgentSorts } from '@/utils/tools'
 
 export interface IMainProps {
   params: any
 }
+
+/**
+ * Files that were uploaded to Dify are served through our own API, so that the
+ * browser does not need to reach the Dify host (and does not depend on the
+ * signature of the preview URL Dify returns).
+ */
+const withLocalPreviewUrl = (files: VisionFile[] = []) => files.map((file) => {
+  const fileId = file.upload_file_id || file.id
+  if (!fileId) { return file }
+  return { ...file, url: `${API_PREFIX}/files/${fileId}/preview` }
+})
 
 const Main: FC<IMainProps> = () => {
   const { t } = useTranslation()
@@ -51,7 +62,7 @@ const Main: FC<IMainProps> = () => {
   const [fileConfig, setFileConfig] = useState<FileUpload | undefined>()
 
   useEffect(() => {
-    if (APP_INFO?.title) { document.title = `${APP_INFO.title} - Powered by Dify` }
+    if (APP_INFO?.title) { document.title = APP_INFO.title }
   }, [APP_INFO?.title])
 
   // onData change thought (the produce obj). https://github.com/immerjs/immer/issues/576
@@ -135,16 +146,16 @@ const Main: FC<IMainProps> = () => {
             id: `question-${item.id}`,
             content: item.query,
             isAnswer: false,
-            message_files: item.message_files?.filter((file: any) => file.belongs_to === 'user') || [],
+            message_files: withLocalPreviewUrl(item.message_files?.filter((file: any) => file.belongs_to === 'user')),
 
           })
           newChatList.push({
             id: item.id,
             content: item.answer,
-            agent_thoughts: addFileInfos(item.agent_thoughts ? sortAgentSorts(item.agent_thoughts) : item.agent_thoughts, item.message_files),
+            agent_thoughts: addFileInfos(item.agent_thoughts ? sortAgentSorts(item.agent_thoughts) : item.agent_thoughts, withLocalPreviewUrl(item.message_files)),
             feedback: item.feedback,
             isAnswer: true,
-            message_files: item.message_files?.filter((file: any) => file.belongs_to === 'assistant') || [],
+            message_files: withLocalPreviewUrl(item.message_files?.filter((file: any) => file.belongs_to === 'assistant')),
           })
         })
         setChatList(newChatList)
@@ -380,7 +391,10 @@ const Main: FC<IMainProps> = () => {
     }
 
     if (files && files?.length > 0) {
-      data.files = files.map((item) => {
+      // `base64_url`/`name`/`size` are client-only,
+      // they are not part of the Dify API contract.
+      data.files = files.map((file) => {
+        const { base64_url: _base64Url, name: _name, size: _size, ...item } = file
         if (item.transfer_method === TransferMethod.local_file) {
           return {
             ...item,
@@ -397,7 +411,7 @@ const Main: FC<IMainProps> = () => {
       id: questionId,
       content: message,
       isAnswer: false,
-      message_files: (files || []).filter((f: any) => f.type === 'image'),
+      message_files: files || [],
     }
 
     const placeholderAnswerId = `answer-placeholder-${Date.now()}`
@@ -686,7 +700,7 @@ const Main: FC<IMainProps> = () => {
 
           {
             hasSetInputs && (
-              <div className='relative grow pc:w-[794px] max-w-full mobile:w-full pb-[180px] mx-auto mb-3.5' ref={chatListDomRef}>
+              <div className='relative grow pc:w-[794px] max-w-full mobile:w-full px-3.5 mx-auto mb-3.5' ref={chatListDomRef}>
                 <Chat
                   chatList={chatList}
                   onSend={handleSend}

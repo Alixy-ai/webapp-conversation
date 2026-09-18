@@ -12,15 +12,15 @@ import Tooltip from '@/app/components/base/tooltip'
 import WorkflowProcess from '@/app/components/workflow/workflow-process'
 import { randomString } from '@/utils/string'
 import ImageGallery from '../../base/image-gallery'
+import AppIcon from '@/app/components/base/app-icon'
+import { appIcon, appIconBackground } from '@/config'
 import LoadingAnim from '../loading-anim'
-import s from '../style.module.css'
 import Thought from '../thought'
 
 function OperationBtn({ innerContent, onClick, className }: { innerContent: React.ReactNode, onClick?: () => void, className?: string }) {
   return (
     <div
-      className={`relative box-border flex items-center justify-center h-7 w-7 p-0.5 rounded-lg bg-white cursor-pointer text-gray-500 hover:text-gray-800 ${className ?? ''}`}
-      style={{ boxShadow: '0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -2px rgba(0, 0, 0, 0.05)' }}
+      className={`relative box-border flex items-center justify-center h-7 w-7 p-0.5 rounded-lg cursor-pointer text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors ${className ?? ''}`}
       onClick={onClick && onClick}
     >
       {innerContent}
@@ -105,8 +105,7 @@ const Answer: FC<IAnswerProps> = ({
         content={isLike ? '取消赞同' : '取消反对'}
       >
         <div
-          className="relative box-border flex items-center justify-center h-7 w-7 p-0.5 rounded-lg bg-white cursor-pointer text-gray-500 hover:text-gray-800"
-          style={{ boxShadow: '0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -2px rgba(0, 0, 0, 0.05)' }}
+          className="relative box-border flex items-center justify-center h-7 w-7 p-0.5 rounded-lg cursor-pointer text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
           onClick={async () => {
             await onFeedback?.(id, { rating: null })
           }}
@@ -140,7 +139,7 @@ const Answer: FC<IAnswerProps> = ({
     }
 
     return (
-      <div className={`${s.itemOperation} flex gap-2`}>
+      <div className='flex gap-1'>
         {userOperation()}
       </div>
     )
@@ -177,26 +176,27 @@ const Answer: FC<IAnswerProps> = ({
   )
 
   return (
-    <div key={id}>
-      <div className="flex items-start">
-        <div className={`${s.answerIcon} w-10 h-10 shrink-0`}>
+    <div key={id} className='group/answer'>
+      <div className='flex items-start gap-3'>
+        <div className='shrink-0 w-8 h-8'>
           {isResponding
-            && (
-              <div className={s.typeingIcon}>
-                <LoadingAnim type="avatar" />
+            ? (
+              <div className='flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-sm text-primary-600'>
+                <LoadingAnim type='avatar' />
               </div>
-            )}
+            )
+            : <AppIcon size='small' rounded icon={appIcon || '🤖'} background={appIconBackground || '#D5F5F6'} />}
         </div>
-        <div className={`${s.answerWrap} max-w-[calc(100%-3rem)]`}>
-          <div className={`${s.answer} relative text-sm text-gray-900`}>
-            <div className={`ml-2 py-3 px-4 bg-gray-100 rounded-tr-2xl rounded-b-2xl ${workflowProcess && 'min-w-[480px]'}`}>
+        <div className='flex-1 min-w-0'>
+          <div className='relative text-sm text-gray-900 max-w-full'>
+            <div className={`px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl rounded-tl-md ${workflowProcess && 'min-w-[480px]'}`}>
               {workflowProcess && (
                 <WorkflowProcess data={workflowProcess} hideInfo />
               )}
               {(isResponding && (isAgentMode ? (!content && (agent_thoughts || []).filter(item => !!item.thought || !!item.tool).length === 0) : !content))
                 ? (
-                  <div className="flex items-center justify-center w-6 h-5">
-                    <LoadingAnim type="text" />
+                  <div className='flex items-center justify-center w-6 h-5'>
+                    <LoadingAnim type='text' />
                   </div>
                 )
                 : (isAgentMode
@@ -205,18 +205,18 @@ const Answer: FC<IAnswerProps> = ({
                     <StreamdownMarkdown content={content} />
                   ))}
               {suggestedQuestions.length > 0 && (
-                <div className="mt-3">
-                  <div className="flex gap-1 mt-1 flex-wrap">
+                <div className='mt-3 pt-3 border-t border-gray-100'>
+                  <div className='flex gap-2 mt-1 flex-wrap'>
                     {suggestedQuestions.map((suggestion, index) => (
-                      <div key={index} className="flex items-center gap-1">
-                        <Button className="text-sm" type="link" onClick={() => suggestionClick(suggestion)}>{suggestion}</Button>
+                      <div key={index}>
+                        <Button className='text-sm' type='link' onClick={() => suggestionClick(suggestion)}>{suggestion}</Button>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
             </div>
-            <div className="absolute top-[-14px] right-[-14px] flex flex-row justify-end gap-1">
+            <div className='mt-1.5 flex flex-row justify-start gap-1 h-7 opacity-0 group-hover/answer:opacity-100 transition-opacity'>
               {!feedbackDisabled && !item.feedbackDisabled && renderItemOperation()}
               {/* User feedback must be displayed */}
               {!feedbackDisabled && renderFeedbackRating(feedback?.rating)}

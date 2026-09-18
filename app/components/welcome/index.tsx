@@ -9,7 +9,7 @@ import { AppInfoComp, ChatBtn, EditBtn, FootLogo, PromptTemplate } from './massi
 import type { AppInfo, PromptConfig } from '@/types/app'
 import Toast from '@/app/components/base/toast'
 import Select from '@/app/components/base/select'
-import { DEFAULT_VALUE_MAX_LEN } from '@/config'
+import { DEFAULT_VALUE_MAX_LEN, isShowPoweredBy } from '@/config'
 
 // regex to match the {{}} and replace it with a span
 const regex = /\{\{([^}]+)\}\}/g
@@ -387,10 +387,12 @@ const Welcome: FC<IWelcomeProps> = ({
               </div>
               : <div>
               </div>}
-            <a className='flex items-center pr-3 space-x-3' href="https://dify.ai/" target="_blank">
-              <span className='uppercase'>{t('app.chat.powerBy')}</span>
-              <FootLogo />
-            </a>
+            {isShowPoweredBy && (
+              <a className='flex items-center pr-3 space-x-3' href="https://dify.ai/" target="_blank">
+                <span className='uppercase'>{t('app.chat.powerBy')}</span>
+                <FootLogo />
+              </a>
+            )}
           </div>
         )}
       </div>

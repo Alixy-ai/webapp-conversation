@@ -7,6 +7,7 @@ const translation = {
   chat: {
     newChat: 'New chat',
     newChatDefaultName: 'New conversation',
+    inputPlaceholder: 'Send a message…',
     openingStatementTitle: 'Opening statement',
     powerBy: 'Powered by',
     prompt: 'Prompt',

@@ -30,26 +30,39 @@ export const isShowPrompt = true
 export const promptTemplate = ''
 ```
 
+## Branding
+
+All branding is optional and lives in `config/index.ts`:
+
+```js
+// Header avatar, which is also used as the browser tab icon.
+// Accepts an emoji ('🤖'), a file in /public ('/logo.png') or an absolute URL.
+// Leave it empty to hide both the header avatar and the tab icon.
+export const appIcon = ''
+
+// Background of the avatar, any CSS color (e.g. '#EFF1F5'). Only used for emojis.
+export const appIconBackground = ''
+
+// Show the "Powered by Dify" link at the bottom of the welcome card.
+export const isShowPoweredBy = false
+```
+
 ## Getting Started
+Requires Node.js >= 18.18 (Node 22 recommended) and pnpm: the repo ships `pnpm-lock.yaml` and pins the package manager through `package.json#packageManager`.
+
 First, install dependencies:
 ```bash
-npm install
-# or
-yarn
-# or
 pnpm install
 ```
 
 Then, run the development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
 ```
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+`pnpm dev` runs Next.js with the default webpack compiler, which needs roughly 3–3.5 GB of free memory. On a low-memory machine either cap the Node.js heap (`NODE_OPTIONS=--max-old-space-size=3072 pnpm dev`) or switch to Turbopack (`pnpm dev --turbopack`), which uses noticeably less memory and compiles faster.
 
 ## Using Docker
 
@@ -58,6 +71,8 @@ docker build . -t <DOCKER_HUB_REPO>/webapp-conversation:latest
 # now you can access it in port 3000
 docker run -p 3000:3000 <DOCKER_HUB_REPO>/webapp-conversation:latest
 ```
+
+> ⚠️ `NEXT_PUBLIC_APP_ID` / `NEXT_PUBLIC_APP_KEY` / `NEXT_PUBLIC_API_URL` are inlined at build time, so `.env.local` has to be present in the build context when running `docker build`. Passing them at container start (`docker run -e ...`) is not enough.
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

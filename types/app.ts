@@ -152,6 +152,10 @@ export interface VisionFile {
   url: string
   upload_file_id: string
   belongs_to?: string
+  /** local preview of a file that was picked in the browser (data: URL) */
+  base64_url?: string
+  name?: string
+  size?: number
 }
 
 export enum BlockEnum {

@@ -1,5 +1,6 @@
 import type { FC } from 'react'
 import classNames from 'classnames'
+import { isImageUrl } from '@/utils/branding'
 import style from './style.module.css'
 
 export interface AppIconProps {
@@ -13,9 +14,12 @@ export interface AppIconProps {
 const AppIcon: FC<AppIconProps> = ({
   size = 'medium',
   rounded = false,
+  icon = '🤖',
   background,
   className,
 }) => {
+  if (!icon) { return null }
+
   return (
     <span
       className={classNames(
@@ -28,7 +32,9 @@ const AppIcon: FC<AppIconProps> = ({
         background,
       }}
     >
-      🤖
+      {isImageUrl(icon)
+        ? <img src={icon} alt="" className='w-full h-full object-contain rounded-[inherit]' />
+        : icon}
     </span>
   )
 }
