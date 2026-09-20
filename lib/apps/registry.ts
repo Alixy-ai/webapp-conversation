@@ -109,6 +109,94 @@ export const deleteApp = (id: string): boolean => {
   return getDb().prepare('DELETE FROM apps WHERE id = ?').run(id).changes > 0
 }
 
+// ── list / search / pagination ───────────────────────────────────────────────
+export interface AppsQuery {
+  /** include apps that are switched off (admin views) */
+  includeDisabled?: boolean
+  /** matches name, slug or Dify app id */
+  search?: string
+  page?: number
+  pageSize?: number
+}
+
+export interface AppsPage {
+  apps: AppRecord[]
+  total: number
+  page: number
+  pageSize: number
+  pageCount: number
+}
+
+const MAX_PAGE_SIZE = 100
+
+const whereClause = ({ includeDisabled, search }: AppsQuery) => {
+  const conditions: string[] = []
+  const params: string[] = []
+
+  if (!includeDisabled) { conditions.push('enabled = 1') }
+
+  const term = (search || '').trim()
+  if (term) {
+    conditions.push('(name LIKE ? OR slug LIKE ? OR id LIKE ?)')
+    const like = `%${term}%`
+    params.push(like, like, like)
+  }
+
+  return {
+    sql: conditions.length ? `WHERE ${conditions.join(' AND ')}` : '',
+    params,
+  }
+}
+
+/** Total number of apps, split by enabled state. */
+export const countApps = () => {
+  const row = getDb()
+    .prepare('SELECT COUNT(*) AS total, COALESCE(SUM(enabled), 0) AS active FROM apps')
+    .get() as { total: number, active: number }
+  return { total: row.total, active: row.active }
+}
+
+/** One page of apps, with the total so callers can render pager metadata. */
+export const queryApps = (query: AppsQuery = {}): AppsPage => {
+  const db = getDb()
+  const { sql: where, params } = whereClause(query)
+
+  const { total } = db
+    .prepare(`SELECT COUNT(*) AS total FROM apps ${where}`)
+    .get(...params) as { total: number }
+
+  const pageSize = Math.min(Math.max(Math.trunc(query.pageSize || 10), 1), MAX_PAGE_SIZE)
+  const pageCount = Math.max(1, Math.ceil(total / pageSize))
+  const page = Math.min(Math.max(Math.trunc(query.page || 1), 1), pageCount)
+
+  const rows = db
+    .prepare(`SELECT * FROM apps ${where} ORDER BY name COLLATE NOCASE ASC, created_at ASC LIMIT ? OFFSET ?`)
+    .all(...params, pageSize, (page - 1) * pageSize) as Record<string, any>[]
+
+  return { apps: rows.map(fromRow), total, page, pageSize, pageCount }
+}
+
+// ── bulk operations ──────────────────────────────────────────────────────────
+const placeholders = (ids: string[]) => ids.map(() => '?').join(',')
+
+/** Returns how many rows changed. */
+export const setAppsEnabled = (ids: string[], enabled: boolean): number => {
+  if (!ids.length) { return 0 }
+  return getDb()
+    .prepare(`UPDATE apps SET enabled = ?, updated_at = ? WHERE id IN (${placeholders(ids)})`)
+    .run(enabled ? 1 : 0, Date.now(), ...ids)
+    .changes
+}
+
+/** Returns how many rows were removed. */
+export const deleteApps = (ids: string[]): number => {
+  if (!ids.length) { return 0 }
+  return getDb()
+    .prepare(`DELETE FROM apps WHERE id IN (${placeholders(ids)})`)
+    .run(...ids)
+    .changes
+}
+
 /**
  * Bootstraps the registry from the environment on first use, so an existing
  * single-app deployment keeps working without touching the database.
