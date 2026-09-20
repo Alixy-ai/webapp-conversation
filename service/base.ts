@@ -1,4 +1,9 @@
 import { API_PREFIX } from '@/config'
+
+let currentAppSlug = ''
+/** Set by <Main /> so every request targets the app in the current URL. */
+export const setAppSlug = (slug: string) => { currentAppSlug = slug }
+const getApiPrefix = () => `${API_PREFIX}/apps/${currentAppSlug}`
 import Toast from '@/app/components/base/toast'
 import type { AnnotationReply, MessageEnd, MessageReplace, ThoughtItem } from '@/app/components/chat/type'
 import type { VisionFile } from '@/types/app'
@@ -249,7 +254,7 @@ const handleStream = (
 const baseFetch = (url: string, fetchOptions: any, { needAllResponseContent }: IOtherOptions) => {
   const options = Object.assign({}, baseOptions, fetchOptions)
 
-  const urlPrefix = API_PREFIX
+  const urlPrefix = getApiPrefix()
 
   let urlWithPrefix = `${urlPrefix}${url.startsWith('/') ? url : `/${url}`}`
 
@@ -325,7 +330,7 @@ const baseFetch = (url: string, fetchOptions: any, { needAllResponseContent }: I
 }
 
 export const upload = (fetchOptions: any): Promise<any> => {
-  const urlPrefix = API_PREFIX
+  const urlPrefix = getApiPrefix()
   const urlWithPrefix = `${urlPrefix}/file-upload`
   const defaultOptions = {
     method: 'POST',
@@ -374,7 +379,7 @@ export const ssePost = (
     method: 'POST',
   }, fetchOptions)
 
-  const urlPrefix = API_PREFIX
+  const urlPrefix = getApiPrefix()
   const urlWithPrefix = `${urlPrefix}${url.startsWith('/') ? url : `/${url}`}`
 
   const { body } = options

@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server'
-import { API_KEY, API_URL } from '@/config/server'
+import { appNotFound } from '@/app/api/utils/common'
+import { resolveApp } from '@/lib/apps/registry'
 
 /**
  * Proxy the Dify file preview endpoint through this app.
@@ -10,14 +11,16 @@ import { API_KEY, API_URL } from '@/config/server'
  */
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ fileId: string }> },
+  { params }: { params: Promise<{ slug: string, fileId: string }> },
 ) {
-  const { fileId } = await params
+  const { slug, fileId } = await params
+  const app = await resolveApp(slug)
+  if (!app) { return appNotFound() }
 
   try {
-    const res = await fetch(`${API_URL}/files/${fileId}/preview`, {
+    const res = await fetch(`${app.apiUrl}/files/${fileId}/preview`, {
       headers: {
-        Authorization: `Bearer ${API_KEY}`,
+        Authorization: `Bearer ${app.apiKey}`,
       },
       cache: 'no-store',
     })

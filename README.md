@@ -50,6 +50,34 @@ export const appIconBackground = ''
 export const isShowPoweredBy = false
 ```
 
+## Multiple apps
+
+Apps live in a SQLite registry (`data/apps.db`, override with `REGISTRY_DB_PATH`) and every one of them is served from its own URL: `/apps/<slug>`.
+
+- On first start the registry is seeded from `NEXT_PUBLIC_APP_ID` / `APP_KEY` / `API_URL` as the app at `/apps/<APP_SLUG>` (default slug `default`), so an existing single-app deployment keeps working untouched.
+- `/` redirects to the app when there is exactly one, otherwise it lists them.
+- The API is scoped as well: `/api/apps/<slug>/chat-messages`, `…/parameters`, `…/conversations`, `…/messages`, `…/file-upload`, `…/files/<id>/preview`. Conversations are already stored per app id in the browser, and the Dify `user` is namespaced per app, so two apps never share history.
+- Branding is per app: name, description, copyright, privacy policy, default language, icon, icon background and the "Powered by Dify" switch all live in the row.
+
+Manage the registry through the admin API (`ADMIN_TOKEN` must be set, otherwise it answers `503`):
+
+```bash
+# list apps (never includes the API key)
+curl -H "x-admin-token: $ADMIN_TOKEN" localhost:3000/api/admin/apps
+
+# add or replace an app
+curl -X POST localhost:3000/api/admin/apps -H "x-admin-token: $ADMIN_TOKEN" \
+  -H 'content-type: application/json' \
+  -d '{"id":"<dify app id>","slug":"support","name":"Support","apiKey":"app-xxx","apiUrl":"https://api.dify.ai/v1"}'
+
+# update or remove one
+curl -X PUT localhost:3000/api/admin/apps/<id> -H "x-admin-token: $ADMIN_TOKEN" \
+  -H 'content-type: application/json' -d '{"enabled":false}'
+curl -X DELETE localhost:3000/api/admin/apps/<id> -H "x-admin-token: $ADMIN_TOKEN"
+```
+
+Keys stay on the server: every registry response goes through `toPublicApp()`, which strips `apiKey` and `apiUrl`.
+
 ## Getting Started
 Requires Node.js >= 18.18 (Node 22 recommended) and pnpm: the repo ships `pnpm-lock.yaml` and pins the package manager through `package.json#packageManager`.
 
@@ -80,6 +108,12 @@ docker run -p 3000:3000 <DOCKER_HUB_REPO>/webapp-conversation:latest
 > ```
 docker run -p 3000:3000 -e APP_KEY=app-xxx -e API_URL=https://api.dify.ai/v1 <DOCKER_HUB_REPO>/webapp-conversation:latest
 > ```
+
+The SQLite registry lives in `/app/data` inside the image, so mount a volume to keep it across container restarts:
+
+```
+docker run -p 3000:3000 -v webapp-data:/app/data -e APP_KEY=app-xxx -e API_URL=https://api.dify.ai/v1 <DOCKER_HUB_REPO>/webapp-conversation:latest
+```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

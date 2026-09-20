@@ -10,7 +10,7 @@ import Sidebar from '@/app/components/sidebar'
 import { Bars3Icon } from '@heroicons/react/24/outline'
 import ConfigSence from '@/app/components/config-scence'
 import { fetchAppParams, fetchChatList, fetchConversations, generationConversationName, sendChatMessage, updateFeedback } from '@/service'
-import type { ChatItem, ConversationItem, Feedbacktype, PromptConfig, VisionFile, VisionSettings } from '@/types/app'
+import type { AppInfo, ChatItem, ConversationItem, Feedbacktype, PromptConfig, VisionFile, VisionSettings } from '@/types/app'
 import type { FileUpload } from '@/app/components/base/file-uploader-in-attachment/types'
 import { Resolution, TransferMethod, WorkflowRunningStatus } from '@/types/app'
 import Chat from '@/app/components/chat'
@@ -19,12 +19,15 @@ import useBreakpoints, { MediaType } from '@/hooks/use-breakpoints'
 import Loading from '@/app/components/base/loading'
 import { replaceVarWithValues, userInputsFormToPromptVariables } from '@/utils/prompt'
 import AppUnavailable from '@/app/components/app-unavailable'
-import { API_PREFIX, APP_ID, APP_INFO, isShowPrompt, promptTemplate } from '@/config'
+import { API_PREFIX, isShowPrompt, promptTemplate } from '@/config'
+import type { Locale } from '@/i18n'
+import type { PublicApp } from '@/lib/apps/types'
+import { setAppSlug } from '@/service/base'
 import type { Annotation as AnnotationType } from '@/types/log'
 import { addFileInfos, sortAgentSorts } from '@/utils/tools'
 
 export interface IMainProps {
-  params: any
+  app: PublicApp
 }
 
 /**
@@ -32,19 +35,27 @@ export interface IMainProps {
  * browser does not need to reach the Dify host (and does not depend on the
  * signature of the preview URL Dify returns).
  */
-const withLocalPreviewUrl = (files: VisionFile[] = []) => files.map((file) => {
+const withLocalPreviewUrl = (files: VisionFile[] = [], slug: string) => files.map((file) => {
   const fileId = file.upload_file_id || file.id
   if (!fileId) { return file }
-  return { ...file, url: `${API_PREFIX}/files/${fileId}/preview` }
+  return { ...file, url: `${API_PREFIX}/apps/${slug}/files/${fileId}/preview` }
 })
 
-const Main: FC<IMainProps> = () => {
+const Main: FC<IMainProps> = ({ app }: IMainProps) => {
   const { t } = useTranslation()
   const media = useBreakpoints()
   const isMobile = media === MediaType.mobile
-  // the app key lives server-side only (config/server.ts),
-  // so the client can only check the public app id here
-  const hasSetAppConfig = !!APP_ID
+  // every request made through service/* must carry the app in the URL
+  setAppSlug(app.slug)
+
+  const appInfo: AppInfo = {
+    title: app.name,
+    description: app.description,
+    copyright: app.copyright,
+    privacy_policy: app.privacyPolicy,
+    default_language: app.defaultLanguage as Locale,
+    disable_session_same_site: app.disableSessionSameSite,
+  }
 
   /*
   * app info
@@ -65,8 +76,8 @@ const Main: FC<IMainProps> = () => {
   const [fileConfig, setFileConfig] = useState<FileUpload | undefined>()
 
   useEffect(() => {
-    if (APP_INFO?.title) { document.title = APP_INFO.title }
-  }, [APP_INFO?.title])
+    document.title = app.name
+  }, [app.name])
 
   // onData change thought (the produce obj). https://github.com/immerjs/immer/issues/576
   useEffect(() => {
@@ -149,16 +160,16 @@ const Main: FC<IMainProps> = () => {
             id: `question-${item.id}`,
             content: item.query,
             isAnswer: false,
-            message_files: withLocalPreviewUrl(item.message_files?.filter((file: any) => file.belongs_to === 'user')),
+            message_files: withLocalPreviewUrl(item.message_files?.filter((file: any) => file.belongs_to === 'user'), app.slug),
 
           })
           newChatList.push({
             id: item.id,
             content: item.answer,
-            agent_thoughts: addFileInfos(item.agent_thoughts ? sortAgentSorts(item.agent_thoughts) : item.agent_thoughts, withLocalPreviewUrl(item.message_files)),
+            agent_thoughts: addFileInfos(item.agent_thoughts ? sortAgentSorts(item.agent_thoughts) : item.agent_thoughts, withLocalPreviewUrl(item.message_files, app.slug)),
             feedback: item.feedback,
             isAnswer: true,
-            message_files: withLocalPreviewUrl(item.message_files?.filter((file: any) => file.belongs_to === 'assistant')),
+            message_files: withLocalPreviewUrl(item.message_files?.filter((file: any) => file.belongs_to === 'assistant'), app.slug),
           })
         })
         setChatList(newChatList)
@@ -178,7 +189,7 @@ const Main: FC<IMainProps> = () => {
       setConversationIdChangeBecauseOfNew(false)
     }
     // trigger handleConversationSwitch
-    setCurrConversationId(id, APP_ID)
+    setCurrConversationId(id, app.id)
     hideSidebar()
   }
 
@@ -236,10 +247,6 @@ const Main: FC<IMainProps> = () => {
 
   // init
   useEffect(() => {
-    if (!hasSetAppConfig) {
-      setAppUnavailable(true)
-      return
-    }
     (async () => {
       try {
         const [conversationData, appParams] = await Promise.all([fetchConversations(), fetchAppParams()])
@@ -250,13 +257,13 @@ const Main: FC<IMainProps> = () => {
           throw new Error(error)
           return
         }
-        const _conversationId = getConversationIdFromStorage(APP_ID)
+        const _conversationId = getConversationIdFromStorage(app.id)
         const currentConversation = conversations.find(item => item.id === _conversationId)
         const isNotNewConversation = !!currentConversation
 
         // fetch new conversation info
         const { user_input_form, opening_statement: introduction, file_upload, system_parameters, suggested_questions = [] }: any = appParams
-        setLocaleOnClient(APP_INFO.default_language, true)
+        setLocaleOnClient(appInfo.default_language, true)
         setNewConversationInfo({
           name: t('app.chat.newChatDefaultName'),
           introduction,
@@ -290,7 +297,7 @@ const Main: FC<IMainProps> = () => {
         })
         setConversationList(conversations as ConversationItem[])
 
-        if (isNotNewConversation) { setCurrConversationId(_conversationId, APP_ID, false) }
+        if (isNotNewConversation) { setCurrConversationId(_conversationId, app.id, false) }
 
         setInited(true)
       }
@@ -490,7 +497,7 @@ const Main: FC<IMainProps> = () => {
         setConversationIdChangeBecauseOfNew(false)
         resetNewConversationInputs()
         setChatNotStarted()
-        setCurrConversationId(tempNewConversationId, APP_ID, true)
+        setCurrConversationId(tempNewConversationId, app.id, true)
         setRespondingFalse()
       },
       onFile(file) {
@@ -654,13 +661,13 @@ const Main: FC<IMainProps> = () => {
   }
 
   const renderSidebar = () => {
-    if (!APP_ID || !APP_INFO || !promptConfig) { return null }
+    if (!promptConfig) { return null }
     return (
       <Sidebar
         list={conversationList}
         onCurrentIdChange={handleConversationIdChange}
         currentId={currConversationId}
-        copyRight={APP_INFO.copyright || APP_INFO.title}
+        copyRight={appInfo.copyright || appInfo.title}
         collapsed={isSidebarCollapsed}
         onToggleCollapsed={() => {
           if (isMobile) { hideSidebar() }
@@ -670,9 +677,9 @@ const Main: FC<IMainProps> = () => {
     )
   }
 
-  if (appUnavailable) { return <AppUnavailable isUnknownReason={isUnknownReason} errMessage={!hasSetAppConfig ? 'Please set NEXT_PUBLIC_APP_ID in .env.local (and APP_KEY for the server)' : ''} /> }
+  if (appUnavailable) { return <AppUnavailable isUnknownReason={isUnknownReason} /> }
 
-  if (!APP_ID || !APP_INFO || !promptConfig) { return <Loading type='app' /> }
+  if (!promptConfig) { return <Loading type='app' /> }
 
   return (
     <div className='h-screen flex bg-white text-gray-900 overflow-hidden'>
@@ -701,7 +708,7 @@ const Main: FC<IMainProps> = () => {
           conversationName={conversationName}
           hasSetInputs={hasSetInputs}
           isPublicVersion={isShowPrompt}
-          siteInfo={APP_INFO}
+          siteInfo={appInfo}
           promptConfig={promptConfig}
           onStartChat={handleStartChat}
           canEditInputs={canEditInputs}

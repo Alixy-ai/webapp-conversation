@@ -13,7 +13,7 @@ import WorkflowProcess from '@/app/components/workflow/workflow-process'
 import { randomString } from '@/utils/string'
 import ImageGallery from '../../base/image-gallery'
 import AppIcon from '@/app/components/base/app-icon'
-import { appIcon, appIconBackground } from '@/config'
+import { useApp } from '@/app/components/app-context'
 import LoadingAnim from '../loading-anim'
 import Thought from '../thought'
 
@@ -85,6 +85,7 @@ const Answer: FC<IAnswerProps> = ({
   const isAgentMode = !!agent_thoughts && agent_thoughts.length > 0
 
   const { t } = useTranslation()
+  const { icon, iconBackground } = useApp()
 
   /**
    * Render feedback results (distinguish between users and administrators)
@@ -185,7 +186,7 @@ const Answer: FC<IAnswerProps> = ({
                 <LoadingAnim type='avatar' />
               </div>
             )
-            : <AppIcon size='small' rounded icon={appIcon || '✦'} background={appIconBackground || '#CCFBF1'} />}
+            : <AppIcon size='small' rounded icon={icon || '✦'} background={iconBackground || '#CCFBF1'} />}
         </div>
         <div className='flex-1 min-w-0'>
           <div className='relative text-sm text-gray-800 max-w-full'>

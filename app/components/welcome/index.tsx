@@ -7,7 +7,8 @@ import FileUploaderInAttachmentWrapper from '../base/file-uploader-in-attachment
 import { AppInfoComp, ChatBtn, EditBtn, FootLogo, PromptTemplate } from './massive-component'
 import Toast from '@/app/components/base/toast'
 import Select from '@/app/components/base/select'
-import { DEFAULT_VALUE_MAX_LEN, isShowPoweredBy } from '@/config'
+import { DEFAULT_VALUE_MAX_LEN } from '@/config'
+import { useApp } from '@/app/components/app-context'
 
 // regex to match the {{}} and replace it with a span
 const regex = /\{\{([^}]+)\}\}/g
@@ -36,6 +37,7 @@ const Welcome: FC<IWelcomeProps> = ({
   onInputsChange,
 }) => {
   const { t } = useTranslation()
+  const { showPoweredBy } = useApp()
   const hasVar = promptConfig.prompt_variables.length > 0
   const [isFold, setIsFold] = useState<boolean>(true)
   const [inputs, setInputs] = useState<Record<string, any>>((() => {
@@ -371,7 +373,7 @@ const Welcome: FC<IWelcomeProps> = ({
               </div>
               : <div>
               </div>}
-            {isShowPoweredBy && (
+            {showPoweredBy && (
               <a className='flex items-center pr-3 space-x-3' href="https://dify.ai/" target="_blank">
                 <span className='uppercase'>{t('app.chat.powerBy')}</span>
                 <FootLogo />

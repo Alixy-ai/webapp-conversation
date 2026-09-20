@@ -55,3 +55,6 @@ yarn.lock
 
 # files attached in the conversation
 uploads/
+
+# SQLite app registry
+/data/

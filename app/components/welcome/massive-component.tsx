@@ -8,14 +8,15 @@ import {
 } from '@heroicons/react/24/outline'
 import type { AppInfo } from '@/types/app'
 import AppIcon from '@/app/components/base/app-icon'
-import { appIcon, appIconBackground } from '@/config'
+import { useApp } from '@/app/components/app-context'
 
 export const AppInfoComp: FC<{ siteInfo: AppInfo }> = ({ siteInfo }) => {
   const { t } = useTranslation()
+  const { icon, iconBackground } = useApp()
   return (
     <div className='text-center'>
       <div className='flex justify-center'>
-        <AppIcon size='large' icon={appIcon || '✦'} background={appIconBackground || '#99F6E4'} className='!text-2xl' />
+        <AppIcon size='large' icon={icon || '✦'} background={iconBackground || '#99F6E4'} className='!text-2xl' />
       </div>
       <h1 className='mt-4 text-2xl font-semibold tracking-tight text-gray-900'>
         {t('app.common.welcome')} {siteInfo.title}

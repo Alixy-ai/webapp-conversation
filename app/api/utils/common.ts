@@ -1,25 +1,40 @@
 import type { NextRequest } from 'next/server'
 import { ChatClient } from 'dify-client'
 import { v4 } from 'uuid'
-import { APP_ID, APP_INFO } from '@/config'
-import { API_KEY, API_URL } from '@/config/server'
+import type { AppRecord } from '@/lib/apps/types'
 
-const userPrefix = `user_${APP_ID}:`
+const createClient = (app: AppRecord) => new ChatClient(app.apiKey, app.apiUrl || undefined)
+const clients = new Map<string, ReturnType<typeof createClient>>()
 
-export const getInfo = (request: NextRequest) => {
+/**
+ * One client per app (and per credential revision), so rotating a key in the
+ * registry invalidates the cached instance.
+ */
+export const getClient = (app: AppRecord) => {
+  const cacheKey = `${app.id}:${app.updatedAt}`
+  const cached = clients.get(cacheKey)
+  if (cached) { return cached }
+
+  const client = createClient(app)
+  clients.set(cacheKey, client)
+  return client
+}
+
+export const getInfo = (request: NextRequest, app: AppRecord) => {
   const sessionId = request.cookies.get('session_id')?.value || v4()
-  const user = userPrefix + sessionId
+  // Dify keeps conversations per `user`, so namespace it by app as well.
+  const user = `user_${app.id}:${sessionId}`
   return {
     sessionId,
     user,
   }
 }
 
-export const setSession = (sessionId: string) => {
-  if (APP_INFO.disable_session_same_site)
+export const setSession = (sessionId: string, app: AppRecord) => {
+  if (app.disableSessionSameSite)
   { return { 'Set-Cookie': `session_id=${sessionId}; SameSite=None; Secure` } }
 
   return { 'Set-Cookie': `session_id=${sessionId}` }
 }
 
-export const client = new ChatClient(API_KEY, API_URL || undefined)
+export const appNotFound = () => new Response('App not found', { status: 404 })
