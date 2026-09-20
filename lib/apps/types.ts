@@ -41,6 +41,8 @@ export interface PublicApp {
   showPoweredBy: boolean
   /** only the admin UI cares; the public pages filter disabled apps out */
   enabled: boolean
+  /** epoch ms, shown in the admin table */
+  updatedAt: number
 }
 
 export const toPublicApp = (app: AppRecord): PublicApp => ({
@@ -56,4 +58,5 @@ export const toPublicApp = (app: AppRecord): PublicApp => ({
   iconBackground: app.iconBackground,
   showPoweredBy: app.showPoweredBy,
   enabled: app.enabled,
+  updatedAt: app.updatedAt,
 })
