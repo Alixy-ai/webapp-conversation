@@ -9,6 +9,9 @@ const translation = {
     newChatDefaultName: 'Cuộc trò chuyện mới',
     openingStatementTitle: 'Lời mở đầu',
     powerBy: 'Được hỗ trợ bởi',
+    aiNotice: {
+      default: 'Nội dung này do AI tạo ra. Vui lòng kiểm chứng thông tin quan trọng.',
+    },
     prompt: 'Nhắc nhở',
     privatePromptConfigTitle: 'Cài đặt cuộc trò chuyện',
     publicPromptConfigTitle: 'Nhắc nhở ban đầu',

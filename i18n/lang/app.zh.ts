@@ -12,6 +12,9 @@ const translation = {
     inputPlaceholder: '输入消息…',
     openingStatementTitle: '对话开场白',
     powerBy: 'Powered by',
+    aiNotice: {
+      default: '本内容由 AI 生成，请注意甄别。',
+    },
     prompt: '提示词',
     privatePromptConfigTitle: '对话设置',
     publicPromptConfigTitle: '对话前提示词',

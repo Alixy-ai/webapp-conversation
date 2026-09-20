@@ -9,6 +9,9 @@ const translation = {
     newChatDefaultName: 'Nueva conversación',
     openingStatementTitle: 'Frase de apertura',
     powerBy: 'Desarrollado por',
+    aiNotice: {
+      default: 'Este contenido es generado por IA. Verifica la información importante.',
+    },
     prompt: 'Prompt',
     privatePromptConfigTitle: 'Ajustes de conversación',
     publicPromptConfigTitle: 'Prompt inicial',

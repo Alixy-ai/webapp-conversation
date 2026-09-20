@@ -7,6 +7,7 @@ import { RiSendPlane2Fill } from '@remixicon/react'
 import Textarea from 'rc-textarea'
 import Answer from './answer'
 import Question from './question'
+import AiNotice from './ai-notice'
 import type { FeedbackFunc } from './type'
 import type { ChatItem, VisionFile, VisionSettings } from '@/types/app'
 import { TransferMethod } from '@/types/app'
@@ -274,6 +275,7 @@ const Chat: FC<IChatProps> = ({
                   </div>
                 </div>
               </div>
+              <AiNotice placement='input_hint' />
             </div>
           </FileUploaderAttachment>
         )

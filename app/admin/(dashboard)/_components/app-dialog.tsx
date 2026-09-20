@@ -4,6 +4,8 @@ import type { FC } from 'react'
 import React, { useEffect, useState } from 'react'
 import { RiCheckLine, RiCloseLine } from '@remixicon/react'
 import type { PublicApp } from '@/lib/apps/types'
+import { AI_NOTICE_POSITIONS, AI_NOTICE_TEXT_MAX_LEN, DEFAULT_AI_NOTICE_POSITION } from '@/config'
+import type { AiNoticePosition } from '@/config'
 
 export interface AppFormValues {
   id: string
@@ -18,6 +20,9 @@ export interface AppFormValues {
   copyright: string
   privacyPolicy: string
   showPoweredBy: boolean
+  aiNoticeEnabled: boolean
+  aiNoticeText: string
+  aiNoticePosition: AiNoticePosition
   enabled: boolean
 }
 
@@ -34,6 +39,9 @@ export const emptyAppForm = (): AppFormValues => ({
   copyright: '',
   privacyPolicy: '',
   showPoweredBy: false,
+  aiNoticeEnabled: false,
+  aiNoticeText: '',
+  aiNoticePosition: DEFAULT_AI_NOTICE_POSITION,
   enabled: true,
 })
 
@@ -50,11 +58,19 @@ export const appToForm = (app: PublicApp): AppFormValues => ({
   copyright: app.copyright,
   privacyPolicy: app.privacyPolicy,
   showPoweredBy: app.showPoweredBy,
+  aiNoticeEnabled: app.aiNoticeEnabled,
+  aiNoticeText: app.aiNoticeText,
+  aiNoticePosition: app.aiNoticePosition,
   enabled: app.enabled,
 })
 
 const input = 'block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-300 outline-none transition-shadow focus:border-primary-400 focus:ring-2 focus:ring-primary-500/15'
 const label = 'mb-1.5 block text-xs font-medium text-gray-600'
+
+export const AI_NOTICE_POSITION_LABELS: Record<AiNoticePosition, string> = {
+  input_hint: 'Below the input box (hint)',
+  answer_footer: 'Below every answer',
+}
 
 interface AppDialogProps {
   title: string
@@ -96,6 +112,11 @@ const AppDialog: FC<AppDialogProps> = ({
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
     if (busy) { return }
+    // a new app is unreachable without a key; editing keeps the stored one
+    if (!lockId && !form.apiKey.trim()) {
+      setError('The API key is required to connect a new app.')
+      return
+    }
     setBusy(true)
     setError('')
 
@@ -110,6 +131,9 @@ const AppDialog: FC<AppDialogProps> = ({
       copyright: form.copyright,
       privacyPolicy: form.privacyPolicy,
       showPoweredBy: form.showPoweredBy,
+      aiNoticeEnabled: form.aiNoticeEnabled,
+      aiNoticeText: form.aiNoticeText.trim(),
+      aiNoticePosition: form.aiNoticePosition,
       enabled: form.enabled,
     }
     // blank means "keep what is stored" — the key never leaves the server
@@ -222,6 +246,61 @@ const AppDialog: FC<AppDialogProps> = ({
             </div>
           </div>
 
+          <p className='mt-6 text-[11px] font-medium uppercase tracking-wide text-gray-400'>AI generated notice</p>
+          <div className='mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2'>
+            <div className='sm:col-span-2'>
+              <label className='flex items-center gap-2 text-xs text-gray-600'>
+                <input
+                  type='checkbox'
+                  className='h-3.5 w-3.5 rounded border-gray-300'
+                  checked={form.aiNoticeEnabled}
+                  onChange={e => set('aiNoticeEnabled', e.target.checked)}
+                />
+                Tell visitors that the answers are AI generated
+              </label>
+            </div>
+
+            <div>
+              <label className={label}>Position</label>
+              <div className='mt-1 space-y-1.5'>
+                {AI_NOTICE_POSITIONS.map(position => (
+                  <label
+                    key={position}
+                    className={`flex items-center gap-2 text-xs ${form.aiNoticeEnabled ? 'text-gray-600' : 'text-gray-300'}`}
+                  >
+                    <input
+                      type='radio'
+                      name='ai-notice-position'
+                      className='h-3.5 w-3.5 border-gray-300'
+                      checked={form.aiNoticePosition === position}
+                      disabled={!form.aiNoticeEnabled}
+                      onChange={() => set('aiNoticePosition', position)}
+                    />
+                    {AI_NOTICE_POSITION_LABELS[position]}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className={label} htmlFor='app-ai-notice-text'>Custom text</label>
+              <textarea
+                id='app-ai-notice-text'
+                rows={3}
+                maxLength={AI_NOTICE_TEXT_MAX_LEN}
+                className={`${input} resize-y disabled:bg-gray-50 disabled:text-gray-400`}
+                value={form.aiNoticeText}
+                disabled={!form.aiNoticeEnabled}
+                placeholder='Leave empty to use the localised default'
+                onChange={e => set('aiNoticeText', e.target.value)}
+              />
+              <p className='mt-1 flex items-center justify-between text-[11px] text-gray-400'>
+                <span>Empty falls back to the built-in text for each language.</span>
+                <span className='tabular-nums'>{Array.from(form.aiNoticeText).length}/{AI_NOTICE_TEXT_MAX_LEN}</span>
+              </p>
+            </div>
+          </div>
+
           <div className='mt-5 flex flex-wrap items-center gap-6'>
             <label className='flex items-center gap-2 text-xs text-gray-600'>
               <input type='checkbox' className='h-3.5 w-3.5 rounded border-gray-300' checked={form.enabled} onChange={e => set('enabled', e.target.checked)} />
@@ -244,7 +323,7 @@ const AppDialog: FC<AppDialogProps> = ({
           </button>
           <button
             type='submit'
-            disabled={busy || !form.id || !form.slug || !form.name}
+            disabled={busy || !form.id || !form.slug || !form.name || (!lockId && !form.apiKey.trim())}
             className='flex h-9 items-center gap-1.5 rounded-lg bg-gray-900 px-3.5 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400'
           >
             <RiCheckLine className='h-4 w-4' />

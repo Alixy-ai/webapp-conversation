@@ -1,3 +1,5 @@
+import type { AiNoticePosition } from '@/config'
+
 export interface AppRecord {
   id: string
   slug: string
@@ -12,6 +14,9 @@ export interface AppRecord {
   icon: string
   iconBackground: string
   showPoweredBy: boolean
+  aiNoticeEnabled: boolean
+  aiNoticeText: string
+  aiNoticePosition: AiNoticePosition
   enabled: boolean
   createdAt: number
   updatedAt: number
@@ -39,6 +44,10 @@ export interface PublicApp {
   icon: string
   iconBackground: string
   showPoweredBy: boolean
+  /** per-app AI generated notice, shown to visitors */
+  aiNoticeEnabled: boolean
+  aiNoticeText: string
+  aiNoticePosition: AiNoticePosition
   /** only the admin UI cares; the public pages filter disabled apps out */
   enabled: boolean
   /** epoch ms, shown in the admin table */
@@ -57,6 +66,9 @@ export const toPublicApp = (app: AppRecord): PublicApp => ({
   icon: app.icon,
   iconBackground: app.iconBackground,
   showPoweredBy: app.showPoweredBy,
+  aiNoticeEnabled: app.aiNoticeEnabled,
+  aiNoticeText: app.aiNoticeText,
+  aiNoticePosition: app.aiNoticePosition,
   enabled: app.enabled,
   updatedAt: app.updatedAt,
 })

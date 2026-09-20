@@ -1,0 +1,58 @@
+# Docker Compose for the conversation web app.
+#
+#   cp .env.example .env.local   # fill in APP_KEY / API_URL / ADMIN_*
+#   docker compose up -d --build
+#
+# Everything the app reads at runtime comes from .env.local — the same file used
+# outside Docker — so nothing has to be configured twice. To override one value
+# for the container only, add it under `environment:` below.
+#
+# The container runs the same `output: standalone` image as the Dockerfile, so
+# credentials stay server-side: APP_KEY / API_URL are read at runtime and are
+# never inlined into the browser bundle.
+services:
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: webapp-conversation:latest
+    container_name: webapp-conversation
+    restart: unless-stopped
+
+    # Host port (override with APP_PORT=8080); the container always listens on 3000.
+    ports:
+      - '${APP_PORT:-3000}:3000'
+
+    # APP_KEY, API_URL, APP_SLUG, APP_NAME, ADMIN_*, AI_NOTICE_* are read from
+    # here. The file is also part of the build context, so NEXT_PUBLIC_APP_ID is
+    # picked up while the image is built — it is inlined into the client bundle
+    # at build time, so rebuild (`--build`) after changing it; restarting the
+    # container alone is not enough.
+    env_file:
+      - path: .env.local
+        required: false
+
+    # Only values that are NOT part of .env.local belong here: an entry below
+    # always wins over the same key in the env_file, so listing e.g. APP_KEY with
+    # an empty default would override the key you configured there.
+    environment:
+      PORT: 3000
+      # The standalone server binds to $HOSTNAME when it is set, which inside a
+      # container is the container id — pin it to all interfaces instead.
+      HOSTNAME: 0.0.0.0
+      TZ: ${TZ:-UTC}
+
+    volumes:
+      # SQLite app registry (data/apps.db). Without this every `up` would start
+      # from an empty registry and re-seed it from the environment above.
+      - registry-data:/app/data
+
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://127.0.0.1:3000/']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  registry-data:

@@ -19,6 +19,9 @@ CREATE TABLE IF NOT EXISTS apps (
   icon TEXT NOT NULL DEFAULT '',
   icon_background TEXT NOT NULL DEFAULT '',
   show_powered_by INTEGER NOT NULL DEFAULT 0,
+  ai_notice_enabled INTEGER NOT NULL DEFAULT 0,
+  ai_notice_text TEXT NOT NULL DEFAULT '',
+  ai_notice_position TEXT NOT NULL DEFAULT 'input_hint',
   enabled INTEGER NOT NULL DEFAULT 1,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
@@ -27,6 +30,26 @@ CREATE INDEX IF NOT EXISTS apps_enabled_idx ON apps (enabled, created_at);
 `
 
 let database: DatabaseSync | null = null
+
+const AI_NOTICE_COLUMNS: Array<[string, string]> = [
+  ['ai_notice_enabled', 'INTEGER NOT NULL DEFAULT 0'],
+  ['ai_notice_text', 'TEXT NOT NULL DEFAULT \'\''],
+  ['ai_notice_position', 'TEXT NOT NULL DEFAULT \'input_hint\''],
+]
+
+/**
+ * `CREATE TABLE IF NOT EXISTS` never adds columns to an existing database,
+ * so add the AI notice columns on demand. Safe to run repeatedly.
+ */
+const migrate = (db: DatabaseSync) => {
+  const existing = new Set(
+    (db.prepare('SELECT name FROM pragma_table_info(\'apps\')').all() as { name: string }[])
+      .map(column => column.name),
+  )
+  for (const [name, definition] of AI_NOTICE_COLUMNS) {
+    if (!existing.has(name)) { db.exec(`ALTER TABLE apps ADD COLUMN ${name} ${definition}`) }
+  }
+}
 
 /**
  * Single connection per server process. The file lives outside the repo
@@ -42,6 +65,7 @@ export const getDb = () => {
   const db = new DatabaseSync(file)
   db.exec('PRAGMA journal_mode = WAL;')
   db.exec(SCHEMA)
+  migrate(db)
 
   database = db
   return database

@@ -59,6 +59,27 @@ Apps live in a SQLite registry (`data/apps.db`, override with `REGISTRY_DB_PATH`
 - The API is scoped as well: `/api/apps/<slug>/chat-messages`, `…/parameters`, `…/conversations`, `…/messages`, `…/file-upload`, `…/files/<id>/preview`. Conversations are already stored per app id in the browser, and the Dify `user` is namespaced per app, so two apps never share history.
 - Branding is per app: name, description, copyright, privacy policy, default language, icon, icon background and the "Powered by Dify" switch all live in the row.
 
+### AI generated notice
+
+Every app can show a "this content is AI generated" notice to visitors. In the
+admin dialog (or via the API) set:
+
+- `aiNoticeEnabled` — master switch, default off. When off, nothing is rendered at all.
+- `aiNoticeText` — custom text, at most 200 characters (code points). Empty falls
+  back to the built-in text localised for the visitor's language.
+- `aiNoticePosition` — where it is shown: `input_hint` (below the input box) or
+  `answer_footer` (below every answer, hidden while an answer is streaming).
+
+```bash
+curl -X PUT localhost:3000/api/admin/apps/<id> -H "x-admin-token: $ADMIN_TOKEN" \
+  -H 'content-type: application/json' \
+  -d '{"aiNoticeEnabled":true,"aiNoticeText":"","aiNoticePosition":"answer_footer"}'
+```
+
+The columns are added to an existing `apps` table automatically on startup
+(idempotent `ALTER TABLE`), and `AI_NOTICE_*` env vars only seed a brand-new
+registry.
+
 ### Admin sign in
 
 Set a password (hash preferred) and log in at `/admin`:
@@ -139,6 +160,20 @@ The SQLite registry lives in `/app/data` inside the image, so mount a volume to 
 ```
 docker run -p 3000:3000 -v webapp-data:/app/data -e APP_KEY=app-xxx -e API_URL=https://api.dify.ai/v1 <DOCKER_HUB_REPO>/webapp-conversation:latest
 ```
+
+### Docker Compose
+
+`docker-compose.yml` wraps the same image with the volume already wired up and passes your `.env.local` into the container:
+
+```
+cp .env.example .env.local   # fill in APP_KEY, API_URL, ADMIN_*
+docker compose up -d --build
+```
+
+- `NEXT_PUBLIC_APP_ID` is still read from the build context, so rebuild (`--build`) after changing it; restarting the container is not enough.
+- The registry lives in the `registry-data` volume — `docker compose down -v` deletes it.
+- `APP_PORT=8080 docker compose up -d` publishes it somewhere else.
+- Everything else (`APP_KEY`, `API_URL`, `ADMIN_*` …) is read from `.env.local`; an `environment:` entry in the compose file wins over it, which is the place to override a single value.
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

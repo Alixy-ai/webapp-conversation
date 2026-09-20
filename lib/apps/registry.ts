@@ -1,6 +1,7 @@
 import 'server-only'
 
-import { APP_INFO, appIcon, appIconBackground, isShowPoweredBy } from '@/config'
+import { APP_INFO, DEFAULT_AI_NOTICE_POSITION, appIcon, appIconBackground, isAiNoticePosition, isShowPoweredBy } from '@/config'
+import { AI_NOTICE } from '@/config/server'
 import { getDb } from './db'
 import type { AppInput, AppRecord } from './types'
 
@@ -18,6 +19,9 @@ const fromRow = (row: Record<string, any>): AppRecord => ({
   icon: row.icon ?? '',
   iconBackground: row.icon_background ?? '',
   showPoweredBy: !!row.show_powered_by,
+  aiNoticeEnabled: !!row.ai_notice_enabled,
+  aiNoticeText: row.ai_notice_text ?? '',
+  aiNoticePosition: isAiNoticePosition(row.ai_notice_position) ? row.ai_notice_position : DEFAULT_AI_NOTICE_POSITION,
   enabled: !!row.enabled,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
@@ -57,6 +61,9 @@ export const upsertApp = (input: AppInput): AppRecord => {
     icon: input.icon ?? existing?.icon ?? '',
     iconBackground: input.iconBackground ?? existing?.iconBackground ?? '',
     showPoweredBy: input.showPoweredBy ?? existing?.showPoweredBy ?? false,
+    aiNoticeEnabled: input.aiNoticeEnabled ?? existing?.aiNoticeEnabled ?? false,
+    aiNoticeText: input.aiNoticeText ?? existing?.aiNoticeText ?? '',
+    aiNoticePosition: input.aiNoticePosition ?? existing?.aiNoticePosition ?? DEFAULT_AI_NOTICE_POSITION,
     enabled: input.enabled ?? existing?.enabled ?? true,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
@@ -66,8 +73,9 @@ export const upsertApp = (input: AppInput): AppRecord => {
     INSERT INTO apps (
       id, slug, name, description, copyright, privacy_policy, default_language,
       disable_session_same_site, api_key, api_url, icon, icon_background,
-      show_powered_by, enabled, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      show_powered_by, ai_notice_enabled, ai_notice_text, ai_notice_position,
+      enabled, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       slug = excluded.slug,
       name = excluded.name,
@@ -81,6 +89,9 @@ export const upsertApp = (input: AppInput): AppRecord => {
       icon = excluded.icon,
       icon_background = excluded.icon_background,
       show_powered_by = excluded.show_powered_by,
+      ai_notice_enabled = excluded.ai_notice_enabled,
+      ai_notice_text = excluded.ai_notice_text,
+      ai_notice_position = excluded.ai_notice_position,
       enabled = excluded.enabled,
       updated_at = excluded.updated_at
   `).run(
@@ -97,6 +108,9 @@ export const upsertApp = (input: AppInput): AppRecord => {
     merged.icon,
     merged.iconBackground,
     merged.showPoweredBy ? 1 : 0,
+    merged.aiNoticeEnabled ? 1 : 0,
+    merged.aiNoticeText,
+    merged.aiNoticePosition,
     merged.enabled ? 1 : 0,
     merged.createdAt,
     merged.updatedAt,
@@ -223,6 +237,9 @@ const seedFromEnv = () => {
     icon: appIcon,
     iconBackground: appIconBackground,
     showPoweredBy: isShowPoweredBy,
+    aiNoticeEnabled: AI_NOTICE.enabled,
+    aiNoticeText: AI_NOTICE.text,
+    aiNoticePosition: AI_NOTICE.position,
     enabled: true,
   })
 }

@@ -14,6 +14,7 @@ import { randomString } from '@/utils/string'
 import ImageGallery from '../../base/image-gallery'
 import AppIcon from '@/app/components/base/app-icon'
 import { useApp } from '@/app/components/app-context'
+import AiNotice from '../ai-notice'
 import LoadingAnim from '../loading-anim'
 import Thought from '../thought'
 
@@ -222,6 +223,8 @@ const Answer: FC<IAnswerProps> = ({
               {/* User feedback must be displayed */}
               {!feedbackDisabled && renderFeedbackRating(feedback?.rating)}
             </div>
+            {/* AI generated notice, only after the answer has settled */}
+            {!isResponding && !item.isError && <AiNotice placement='answer_footer' />}
           </div>
         </div>
       </div>

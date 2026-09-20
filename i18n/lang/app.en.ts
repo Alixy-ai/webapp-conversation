@@ -12,6 +12,9 @@ const translation = {
     inputPlaceholder: 'Send a message…',
     openingStatementTitle: 'Opening statement',
     powerBy: 'Powered by',
+    aiNotice: {
+      default: 'This content is AI generated. Please verify important information.',
+    },
     prompt: 'Prompt',
     privatePromptConfigTitle: 'Conversation settings',
     publicPromptConfigTitle: 'Initial Prompt',

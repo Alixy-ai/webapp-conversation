@@ -27,3 +27,13 @@ export const appIcon = ''
 export const appIconBackground = ''
 // Show the "Powered by Dify" link at the bottom of the welcome card.
 export const isShowPoweredBy = false
+
+// ── AI generated notice ─────────────────────────────────────────────────
+/** Where the AI generated notice is rendered for an app. */
+export const AI_NOTICE_POSITIONS = ['input_hint', 'answer_footer'] as const
+export type AiNoticePosition = typeof AI_NOTICE_POSITIONS[number]
+export const DEFAULT_AI_NOTICE_POSITION: AiNoticePosition = 'input_hint'
+/** Max length in Unicode code points, shared by the admin form and the API. */
+export const AI_NOTICE_TEXT_MAX_LEN = 200
+export const isAiNoticePosition = (value: unknown): value is AiNoticePosition =>
+  typeof value === 'string' && (AI_NOTICE_POSITIONS as readonly string[]).includes(value)

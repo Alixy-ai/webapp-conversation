@@ -4,6 +4,10 @@ out
 build
 .git
 .gitignore
+# local app state: the SQLite registry holds live Dify API keys, and uploads/
+# are files attached in the conversation — neither belongs in a build context
+data
+uploads
 .qunica
 .vscode
 .serena

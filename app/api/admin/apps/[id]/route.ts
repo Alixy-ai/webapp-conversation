@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import type { AppInput } from '@/lib/apps/types'
 import { toPublicApp } from '@/lib/apps/types'
 import { guardAdminApi } from '@/lib/admin/auth'
+import { normalizeAiNotice } from '@/lib/apps/ai-notice'
 import { deleteApp, getAppById, upsertApp } from '@/lib/apps/registry'
 
 export async function GET(request: NextRequest, { params }: {
@@ -27,18 +28,28 @@ export async function PUT(request: NextRequest, { params }: {
   const existing = getAppById(id)
   if (!existing) { return NextResponse.json({ error: 'not found' }, { status: 404 }) }
 
-  const body = await request.json().catch(() => ({})) as Partial<AppInput>
-  if (body.slug && !/^[a-z0-9][a-z0-9-]*$/.test(body.slug)) {
+  const body = await request.json().catch(() => ({})) as (Partial<AppInput> & Record<string, unknown>)
+  // untyped JSON: a non-string slug would otherwise be bound straight into SQL
+  const rawSlug: unknown = body.slug
+  if (rawSlug !== undefined && (typeof rawSlug !== 'string' || !/^[a-z0-9][a-z0-9-]*$/.test(rawSlug))) {
     return NextResponse.json({ error: 'slug must be lowercase alphanumeric with dashes' }, { status: 400 })
   }
+  const notice = normalizeAiNotice(body)
+  if ('error' in notice) { return NextResponse.json({ error: notice.error }, { status: 400 }) }
 
+  // blank means "keep what is stored", so a partial update never wipes the key
+  const rawApiKey: unknown = body.apiKey
+  const rawApiUrl: unknown = body.apiUrl
   try {
     const app = upsertApp({
       ...body,
+      ...notice.value,
       id,
-      slug: body.slug ?? existing.slug,
-      apiKey: body.apiKey ?? existing.apiKey,
-      apiUrl: body.apiUrl ?? existing.apiUrl,
+      slug: rawSlug ?? existing.slug,
+      apiKey: (typeof rawApiKey === 'string' ? rawApiKey.trim() : '') || existing.apiKey,
+      apiUrl: rawApiUrl === null
+        ? ''
+        : ((typeof rawApiUrl === 'string' ? rawApiUrl.trim() : '') || existing.apiUrl),
     })
     return NextResponse.json(toPublicApp(app))
   }
