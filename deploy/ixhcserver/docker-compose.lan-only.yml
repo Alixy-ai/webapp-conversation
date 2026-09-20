@@ -1,0 +1,29 @@
+# Override: publish the app on loopback only, on an uncommon host port.
+#
+# The server (ixhcserver) already runs nginx, which owns ports 80/443. nginx
+# terminates TLS and forwards /chatbot to 127.0.0.1:13001, so the app itself
+# must not be reachable directly on the network.
+#
+# Why 13001 and not the usual 3000:
+#   * 3000 is the default of a whole family of tools (Grafana, `next dev`, …)
+#     and of this repo's own compose file — it is the port most likely to be
+#     claimed by something else on a shared box later;
+#   * anything that tries to bind host port 3000 (a dev server, another
+#     container publishing 3000:3000) would then fail with EADDRINUSE /
+#     "port is already allocated".
+#   The container keeps listening on 3000 internally — only the host-side
+#   number changed. To use a different host port, edit TWO places: this line
+#   and the `proxy_pass` in the nginx snippet.
+#
+# Use together with the main compose file, from the repo root:
+#
+#   docker compose -f docker-compose.yml -f deploy/ixhcserver/docker-compose.lan-only.yml up -d --build
+#   docker compose -f docker-compose.yml -f deploy/ixhcserver/docker-compose.lan-only.yml ps
+#
+# `!override` replaces the `ports` list instead of appending to it — a plain
+# list would publish both 0.0.0.0:13001 and 127.0.0.1:13001 and then collide
+# on the same host port.
+services:
+  webapp:
+    ports: !override
+      - '127.0.0.1:13001:3000'
