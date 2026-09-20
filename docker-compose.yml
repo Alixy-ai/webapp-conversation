@@ -48,9 +48,12 @@ services:
       - registry-data:/app/data
 
     healthcheck:
-      # ${NEXT_PUBLIC_BASE_PATH} is expanded inside the container, so the probe
-      # follows a configured sub-path instead of always hitting the root.
-      test: ['CMD-SHELL', 'wget -q --spider "http://127.0.0.1:3000${NEXT_PUBLIC_BASE_PATH}/"']
+      # `$$` keeps the expansion inside the container. A single `$` would be
+      # substituted by compose itself at parse time — from the shell / a `.env`
+      # file, NOT from `.env.local` — collapsing the probe to "/" and marking
+      # the container unhealthy whenever the app is built with a basePath.
+      # The container shell expands NEXT_PUBLIC_BASE_PATH from env_file instead.
+      test: ['CMD-SHELL', 'wget -q --spider "http://127.0.0.1:3000$${NEXT_PUBLIC_BASE_PATH}/"']
       interval: 30s
       timeout: 5s
       retries: 3
