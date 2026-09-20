@@ -39,6 +39,8 @@ export interface PublicApp {
   icon: string
   iconBackground: string
   showPoweredBy: boolean
+  /** only the admin UI cares; the public pages filter disabled apps out */
+  enabled: boolean
 }
 
 export const toPublicApp = (app: AppRecord): PublicApp => ({
@@ -53,4 +55,5 @@ export const toPublicApp = (app: AppRecord): PublicApp => ({
   icon: app.icon,
   iconBackground: app.iconBackground,
   showPoweredBy: app.showPoweredBy,
+  enabled: app.enabled,
 })

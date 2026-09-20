@@ -2,14 +2,14 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import type { AppInput } from '@/lib/apps/types'
 import { toPublicApp } from '@/lib/apps/types'
-import { adminDisabled, adminToken, isAdmin, unauthorized } from '@/app/api/utils/admin'
+import { guardAdminApi } from '@/lib/admin/auth'
 import { deleteApp, getAppById, upsertApp } from '@/lib/apps/registry'
 
 export async function GET(request: NextRequest, { params }: {
   params: Promise<{ id: string }>
 }) {
-  if (!adminToken()) { return adminDisabled() }
-  if (!isAdmin(request)) { return unauthorized() }
+  const denied = guardAdminApi(request)
+  if (denied) { return denied }
 
   const { id } = await params
   const app = getAppById(id)
@@ -20,8 +20,8 @@ export async function GET(request: NextRequest, { params }: {
 export async function PUT(request: NextRequest, { params }: {
   params: Promise<{ id: string }>
 }) {
-  if (!adminToken()) { return adminDisabled() }
-  if (!isAdmin(request)) { return unauthorized() }
+  const denied = guardAdminApi(request)
+  if (denied) { return denied }
 
   const { id } = await params
   const existing = getAppById(id)
@@ -50,8 +50,8 @@ export async function PUT(request: NextRequest, { params }: {
 export async function DELETE(request: NextRequest, { params }: {
   params: Promise<{ id: string }>
 }) {
-  if (!adminToken()) { return adminDisabled() }
-  if (!isAdmin(request)) { return unauthorized() }
+  const denied = guardAdminApi(request)
+  if (denied) { return denied }
 
   const { id } = await params
   if (!deleteApp(id)) { return NextResponse.json({ error: 'not found' }, { status: 404 }) }

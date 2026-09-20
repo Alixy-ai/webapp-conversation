@@ -59,7 +59,32 @@ Apps live in a SQLite registry (`data/apps.db`, override with `REGISTRY_DB_PATH`
 - The API is scoped as well: `/api/apps/<slug>/chat-messages`, `…/parameters`, `…/conversations`, `…/messages`, `…/file-upload`, `…/files/<id>/preview`. Conversations are already stored per app id in the browser, and the Dify `user` is namespaced per app, so two apps never share history.
 - Branding is per app: name, description, copyright, privacy policy, default language, icon, icon background and the "Powered by Dify" switch all live in the row.
 
-Manage the registry through the admin API (`ADMIN_TOKEN` must be set, otherwise it answers `503`):
+### Admin sign in
+
+Set a password (hash preferred) and log in at `/admin`:
+
+```bash
+# the hash is generated locally and never leaves your machine;
+# it uses ':' separators because '$' is expanded inside .env files
+node scripts/hash-admin-password.mjs 'your-password'
+```
+
+```bash
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD_HASH=scrypt:<salt>:<hash>
+# optional: sign session cookies with a fixed secret instead of deriving one
+ADMIN_SESSION_SECRET=
+```
+
+Sessions are signed (HMAC-SHA256) `httpOnly` cookies valid for 12 h, and `/admin`
+redirects to `/admin/login` without one. Five failed logins from the same IP are
+throttled for 15 minutes.
+
+### Admin API
+
+The same operations are available over HTTP, authenticated either with the session
+cookie or (for scripts/CI) with `ADMIN_TOKEN`. When neither a token nor login
+credentials are configured the API answers `503`:
 
 ```bash
 # list apps (never includes the API key)

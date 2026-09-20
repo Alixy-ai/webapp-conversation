@@ -2,20 +2,20 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import type { AppInput } from '@/lib/apps/types'
 import { toPublicApp } from '@/lib/apps/types'
-import { adminDisabled, adminToken, isAdmin, unauthorized } from '@/app/api/utils/admin'
+import { guardAdminApi } from '@/lib/admin/auth'
 import { ensureAppsSeeded, listApps, upsertApp } from '@/lib/apps/registry'
 
 export async function GET(request: NextRequest) {
-  if (!adminToken()) { return adminDisabled() }
-  if (!isAdmin(request)) { return unauthorized() }
+  const denied = guardAdminApi(request)
+  if (denied) { return denied }
 
   await ensureAppsSeeded()
   return NextResponse.json(listApps(true).map(toPublicApp))
 }
 
 export async function POST(request: NextRequest) {
-  if (!adminToken()) { return adminDisabled() }
-  if (!isAdmin(request)) { return unauthorized() }
+  const denied = guardAdminApi(request)
+  if (denied) { return denied }
 
   const body = await request.json().catch(() => null) as Partial<AppInput> | null
   if (!body?.id || !body?.slug || !body?.apiKey) {
