@@ -1,18 +1,9 @@
 import React from 'react'
 import type { FC } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  ChatBubbleOvalLeftEllipsisIcon,
-  PencilSquareIcon,
-} from '@heroicons/react/24/outline'
-import { ChatBubbleOvalLeftEllipsisIcon as ChatBubbleOvalLeftEllipsisSolidIcon } from '@heroicons/react/24/solid'
-import Button from '@/app/components/base/button'
-// import Card from './card'
+import { PencilSquareIcon } from '@heroicons/react/24/outline'
+import { RiSidebarFoldLine, RiSidebarUnfoldLine } from '@remixicon/react'
 import type { ConversationItem } from '@/types/app'
-
-function classNames(...classes: any[]) {
-  return classes.filter(Boolean).join(' ')
-}
 
 const MAX_CONVERSATION_LENTH = 20
 
@@ -21,6 +12,8 @@ export interface ISidebarProps {
   currentId: string
   onCurrentIdChange: (id: string) => void
   list: ConversationItem[]
+  collapsed: boolean
+  onToggleCollapsed: () => void
 }
 
 const Sidebar: FC<ISidebarProps> = ({
@@ -28,60 +21,108 @@ const Sidebar: FC<ISidebarProps> = ({
   currentId,
   onCurrentIdChange,
   list,
+  collapsed,
+  onToggleCollapsed,
 }) => {
   const { t } = useTranslation()
-  return (
-    <div
-      className="shrink-0 flex flex-col overflow-y-auto bg-white pc:w-[244px] tablet:w-[192px] mobile:w-[240px]  border-r border-gray-200 tablet:h-[calc(100vh_-_3rem)] mobile:h-screen"
-    >
-      {list.length < MAX_CONVERSATION_LENTH && (
-        <div className="flex flex-shrink-0 p-4 !pb-0">
-          <Button
-            onClick={() => { onCurrentIdChange('-1') }}
-            className="group block w-full flex-shrink-0 !justify-start !h-9 text-primary-600 items-center text-sm"
-          >
-            <PencilSquareIcon className="mr-2 h-4 w-4" /> {t('app.chat.newChat')}
-          </Button>
-        </div>
-      )}
 
-      <nav className="mt-4 flex-1 space-y-1 bg-white p-4 !pt-0">
+  /* ── collapsed rail ─────────────────────────────────────────── */
+  if (collapsed) {
+    return (
+      <aside className="shrink-0 flex flex-col items-center w-[52px] gap-1 py-3 bg-gray-50 border-r border-gray-200/80">
+        <button
+          type='button'
+          onClick={onToggleCollapsed}
+          title={t('app.chat.expandSidebar')}
+          className='flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors cursor-pointer'
+        >
+          <RiSidebarUnfoldLine className='w-[18px] h-[18px]' />
+        </button>
+        <div className='my-1 w-6 border-t border-gray-200' />
+        <button
+          type='button'
+          onClick={() => { onCurrentIdChange('-1') }}
+          title={t('app.chat.newChat')}
+          className='flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors cursor-pointer'
+        >
+          <PencilSquareIcon className="w-[18px] h-[18px]" />
+        </button>
+        <nav className='flex-1 flex flex-col items-center gap-0.5 overflow-y-auto py-1 w-full'>
+          {list.slice(0, MAX_CONVERSATION_LENTH).map((item) => {
+            const isCurrent = item.id === currentId
+            return (
+              <div
+                key={item.id}
+                onClick={() => onCurrentIdChange(item.id)}
+                title={item.name}
+                className={`relative flex items-center justify-center w-8 h-8 rounded-lg text-sm cursor-pointer transition-colors ${
+                  isCurrent
+                    ? 'bg-white text-gray-900 shadow-sm font-medium'
+                    : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+                }`}
+              >
+                {isCurrent && (
+                  <span className='absolute -left-[7px] top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-full bg-primary-500' />
+                )}
+                <span className='truncate'>{item.name?.[0] ?? '·'}</span>
+              </div>
+            )
+          })}
+        </nav>
+        <div className="text-[9px] leading-3 text-gray-300 select-none">©{(new Date()).getFullYear()}</div>
+      </aside>
+    )
+  }
+
+  /* ── expanded sidebar ───────────────────────────────────────── */
+  return (
+    <aside
+      className="shrink-0 flex flex-col overflow-y-auto bg-gray-50 pc:w-[232px] tablet:w-[200px] mobile:w-[260px] h-full border-r border-gray-200/80"
+    >
+      <div className="flex flex-shrink-0 items-center justify-between px-3 pt-3">
+        <button
+          type='button'
+          onClick={() => { onCurrentIdChange('-1') }}
+          className="group flex w-[calc(100%-32px)] items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 h-9 text-sm font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer"
+        >
+          <PencilSquareIcon className="h-4 w-4 text-gray-400 group-hover:text-primary-600 transition-colors" />
+          <span className='truncate'>{t('app.chat.newChat')}</span>
+        </button>
+        <button
+          type='button'
+          onClick={onToggleCollapsed}
+          title={t('app.chat.collapseSidebar')}
+          className='flex items-center justify-center shrink-0 w-8 h-8 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors cursor-pointer'
+        >
+          <RiSidebarFoldLine className='w-[18px] h-[18px]' />
+        </button>
+      </div>
+
+      <nav className="mt-4 flex-1 overflow-y-auto px-3 space-y-0.5">
         {list.map((item) => {
           const isCurrent = item.id === currentId
-          const ItemIcon
-            = isCurrent ? ChatBubbleOvalLeftEllipsisSolidIcon : ChatBubbleOvalLeftEllipsisIcon
           return (
             <div
               onClick={() => onCurrentIdChange(item.id)}
               key={item.id}
-              className={classNames(
+              className={`relative flex items-center rounded-lg px-3 py-2 text-sm cursor-pointer transition-colors ${
                 isCurrent
-                  ? 'bg-primary-50 text-primary-600'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-700',
-                'group flex items-center rounded-md px-2 py-2 text-sm font-medium cursor-pointer',
-              )}
+                  ? 'bg-white text-gray-900 shadow-sm font-medium'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+              }`}
             >
-              <ItemIcon
-                className={classNames(
-                  isCurrent
-                    ? 'text-primary-600'
-                    : 'text-gray-400 group-hover:text-gray-500',
-                  'mr-3 h-5 w-5 flex-shrink-0',
-                )}
-                aria-hidden="true"
-              />
-              {item.name}
+              {isCurrent && (
+                <span className='absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-full bg-primary-500' />
+              )}
+              <span className='truncate'>{item.name}</span>
             </div>
           )
         })}
       </nav>
-      {/* <a className="flex flex-shrink-0 p-4" href="https://langgenius.ai/" target="_blank">
-        <Card><div className="flex flex-row items-center"><ChatBubbleOvalLeftEllipsisSolidIcon className="text-primary-600 h-6 w-6 mr-2" /><span>LangGenius</span></div></Card>
-      </a> */}
-      <div className="flex flex-shrink-0 pr-4 pb-4 pl-4">
+      <div className="flex flex-shrink-0 px-4 pb-4">
         <div className="text-gray-400 font-normal text-xs">© {copyRight} {(new Date()).getFullYear()}</div>
       </div>
-    </div>
+    </aside>
   )
 }
 

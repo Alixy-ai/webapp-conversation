@@ -181,42 +181,42 @@ const Answer: FC<IAnswerProps> = ({
         <div className='shrink-0 w-8 h-8'>
           {isResponding
             ? (
-              <div className='flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-sm text-primary-600'>
+              <div className='flex items-center justify-center w-8 h-8 rounded-full bg-primary-50 text-primary-600 border border-primary-100'>
                 <LoadingAnim type='avatar' />
               </div>
             )
-            : <AppIcon size='small' rounded icon={appIcon || '🤖'} background={appIconBackground || '#D5F5F6'} />}
+            : <AppIcon size='small' rounded icon={appIcon || '✦'} background={appIconBackground || '#CCFBF1'} />}
         </div>
         <div className='flex-1 min-w-0'>
-          <div className='relative text-sm text-gray-900 max-w-full'>
-            <div className={`px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl rounded-tl-md ${workflowProcess && 'min-w-[480px]'}`}>
-              {workflowProcess && (
+          <div className='relative text-sm text-gray-800 max-w-full'>
+            {workflowProcess && (
+              <div className='mb-2'>
                 <WorkflowProcess data={workflowProcess} hideInfo />
-              )}
-              {(isResponding && (isAgentMode ? (!content && (agent_thoughts || []).filter(item => !!item.thought || !!item.tool).length === 0) : !content))
-                ? (
-                  <div className='flex items-center justify-center w-6 h-5'>
-                    <LoadingAnim type='text' />
-                  </div>
-                )
-                : (isAgentMode
-                  ? agentModeAnswer
-                  : (
-                    <StreamdownMarkdown content={content} />
-                  ))}
-              {suggestedQuestions.length > 0 && (
-                <div className='mt-3 pt-3 border-t border-gray-100'>
-                  <div className='flex gap-2 mt-1 flex-wrap'>
-                    {suggestedQuestions.map((suggestion, index) => (
-                      <div key={index}>
-                        <Button className='text-sm' type='link' onClick={() => suggestionClick(suggestion)}>{suggestion}</Button>
-                      </div>
-                    ))}
-                  </div>
+              </div>
+            )}
+            {(isResponding && (isAgentMode ? (!content && (agent_thoughts || []).filter(item => !!item.thought || !!item.tool).length === 0) : !content))
+              ? (
+                <div className='flex items-center justify-center w-6 h-5'>
+                  <LoadingAnim type='text' />
                 </div>
-              )}
-            </div>
-            <div className='mt-1.5 flex flex-row justify-start gap-1 h-7 opacity-0 group-hover/answer:opacity-100 transition-opacity'>
+              )
+              : (isAgentMode
+                ? agentModeAnswer
+                : (
+                  <StreamdownMarkdown content={content} />
+                ))}
+            {suggestedQuestions.length > 0 && (
+              <div className='mt-3 pt-3 border-t border-gray-100'>
+                <div className='flex gap-2 mt-1 flex-wrap'>
+                  {suggestedQuestions.map((suggestion, index) => (
+                    <div key={index}>
+                      <Button className='text-sm' type='link' onClick={() => suggestionClick(suggestion)}>{suggestion}</Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className='mt-1 flex flex-row justify-start gap-1 h-7 opacity-0 group-hover/answer:opacity-100 transition-opacity'>
               {!feedbackDisabled && !item.feedbackDisabled && renderItemOperation()}
               {/* User feedback must be displayed */}
               {!feedbackDisabled && renderFeedbackRating(feedback?.rating)}

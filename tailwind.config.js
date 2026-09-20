@@ -9,6 +9,7 @@ module.exports = {
     extend: {
       colors: {
         gray: {
+          25: '#FCFCFD',
           50: '#F9FAFB',
           100: '#F3F4F6',
           200: '#E5E7EB',
@@ -20,15 +21,14 @@ module.exports = {
           900: '#111928',
         },
         primary: {
-          50: '#EBF5FF',
-          100: '#E1EFFE',
-          200: '#C3DDFD',
-          300: '#A4CAFE',
-          600: '#1C64F2',
-          700: '#1A56DB',
-        },
-        blue: {
-          500: '#E1EFFE',
+          50: '#F0FDFA',
+          100: '#CCFBF1',
+          200: '#99F6E4',
+          300: '#5EEAD4',
+          400: '#2DD4BF',
+          500: '#14B8A6',
+          600: '#0D9488',
+          700: '#0F766E',
         },
         green: {
           50: '#F3FAF7',

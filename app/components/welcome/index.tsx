@@ -2,11 +2,9 @@
 import type { FC } from 'react'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import TemplateVarPanel, { PanelTitle, VarOpBtnGroup } from '../value-panel'
-import FileUploaderInAttachmentWrapper from '../base/file-uploader-in-attachment'
-import s from './style.module.css'
-import { AppInfoComp, ChatBtn, EditBtn, FootLogo, PromptTemplate } from './massive-component'
 import type { AppInfo, PromptConfig } from '@/types/app'
+import FileUploaderInAttachmentWrapper from '../base/file-uploader-in-attachment'
+import { AppInfoComp, ChatBtn, EditBtn, FootLogo, PromptTemplate } from './massive-component'
 import Toast from '@/app/components/base/toast'
 import Select from '@/app/components/base/select'
 import { DEFAULT_VALUE_MAX_LEN, isShowPoweredBy } from '@/config'
@@ -81,18 +79,21 @@ const Welcome: FC<IWelcomeProps> = ({
 
   const renderHeader = () => {
     return (
-      <div className='absolute top-0 left-0 right-0 flex items-center justify-between border-b border-gray-100 mobile:h-12 tablet:h-16 px-8 bg-white'>
-        <div className='text-gray-900'>{conversationName}</div>
+      <div className='sticky top-0 z-10 flex items-center justify-between border-b border-gray-200/80 mobile:h-12 tablet:h-14 px-4 md:px-6 bg-white/90 backdrop-blur'>
+        <div className='text-sm font-semibold text-gray-800'>{conversationName}</div>
       </div>
     )
   }
 
   const renderInputs = () => {
     return (
-      <div className='space-y-3'>
+      <div className='space-y-4'>
         {promptConfig.prompt_variables.map(item => (
-          <div className='tablet:flex items-start mobile:space-y-2 tablet:space-y-0 mobile:text-xs tablet:text-sm' key={item.key}>
-            <label className={`flex-shrink-0 flex items-center tablet:leading-9 mobile:text-gray-700 tablet:text-gray-900 mobile:font-medium pc:font-normal ${s.formLabel}`}>{item.name}</label>
+          <div className='flex flex-col space-y-1.5' key={item.key}>
+            <label className='text-sm font-medium text-gray-700'>
+              {item.name}
+              {!item.required && <span className='ml-1.5 text-xs font-normal text-gray-400'>{t('app.variableTable.optional')}</span>}
+            </label>
             {item.type === 'select'
               && (
                 <Select
@@ -101,22 +102,22 @@ const Welcome: FC<IWelcomeProps> = ({
                   onSelect={(i) => { setInputs({ ...inputs, [item.key]: i.value }) }}
                   items={(item.options || []).map(i => ({ name: i, value: i }))}
                   allowSearch={false}
-                  bgClassName='bg-gray-50'
+                  bgClassName='bg-white'
                 />
               )}
             {item.type === 'string' && (
               <input
-                placeholder={`${item.name}${!item.required ? `(${t('app.variableTable.optional')})` : ''}`}
+                placeholder={t('app.errorMessage.valueOfVarRequired') === 'Variables value can not be empty' ? `Enter ${item.name}` : `请输入${item.name}`}
                 value={inputs?.[item.key] || ''}
                 onChange={(e) => { setInputs({ ...inputs, [item.key]: e.target.value }) }}
-                className={'w-full flex-grow py-2 pl-3 pr-3 box-border rounded-lg bg-gray-50'}
+                className={'w-full flex-grow py-2 pl-3 pr-3 box-border rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-500/15 transition-shadow'}
                 maxLength={item.max_length || DEFAULT_VALUE_MAX_LEN}
               />
             )}
             {item.type === 'paragraph' && (
               <textarea
-                className="w-full h-[104px] flex-grow py-2 pl-3 pr-3 box-border rounded-lg bg-gray-50"
-                placeholder={`${item.name}${!item.required ? `(${t('app.variableTable.optional')})` : ''}`}
+                className="w-full h-[104px] flex-grow py-2 pl-3 pr-3 box-border rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-500/15 transition-shadow"
+                placeholder={`Enter ${item.name}`}
                 value={inputs?.[item.key] || ''}
                 onChange={(e) => { setInputs({ ...inputs, [item.key]: e.target.value }) }}
               />
@@ -124,8 +125,8 @@ const Welcome: FC<IWelcomeProps> = ({
             {item.type === 'number' && (
               <input
                 type="number"
-                className="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 sm:text-xs focus:ring-blue-500 focus:border-blue-500 "
-                placeholder={`${item.name}${!item.required ? `(${t('appDebug.variableTable.optional')})` : ''}`}
+                className="block w-full p-2 text-gray-900 border border-gray-200 rounded-lg bg-white text-sm placeholder:text-gray-400 outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-500/15 transition-shadow"
+                placeholder={`Enter ${item.name}`}
                 value={inputs[item.key]}
                 onChange={(e) => { onInputsChange({ ...inputs, [item.key]: e.target.value }) }}
               />
@@ -172,33 +173,33 @@ const Welcome: FC<IWelcomeProps> = ({
   }
 
   const canChat = () => {
-    const vars = promptConfig?.prompt_variables ?? [];
+    const vars = promptConfig?.prompt_variables ?? []
 
-    const hasEmptyRequired = vars.some(v => {
-      const isRequired = v?.required ?? true;
-      if (!isRequired) return false;
+    const hasEmptyRequired = vars.some((v) => {
+      const isRequired = v?.required ?? true
+      if (!isRequired) { return false }
 
-      const val = inputs?.[v.key];
+      const val = inputs?.[v.key]
 
-      if (typeof val === 'string') return val.trim() === '';
+      if (typeof val === 'string') { return val.trim() === '' }
 
-      return val === undefined || val === null;
-    });
+      return val === undefined || val === null
+    })
 
     if (hasEmptyRequired) {
-      logError(t('app.errorMessage.valueOfVarRequired'));
-      return false;
+      logError(t('app.errorMessage.valueOfVarRequired'))
+      return false
     }
 
-    return true;
-  };
+    return true
+  }
 
   const handleChat = () => {
     if (!canChat()) { return }
 
     Object.keys(inputs).forEach((key) => {
       if (!inputs[key])
-        delete inputs[key]
+      { delete inputs[key] }
     })
 
     onStartChat(inputs)
@@ -209,110 +210,96 @@ const Welcome: FC<IWelcomeProps> = ({
       return (
         <div>
           <AppInfoComp siteInfo={siteInfo} />
-          <TemplateVarPanel
-            isFold={false}
-            header={
-              <>
-                <PanelTitle
-                  title={t('app.chat.publicPromptConfigTitle')}
-                  className='mb-1'
-                />
-                <PromptTemplate html={highLightPromoptTemplate} />
-              </>
-            }
-          >
-            <ChatBtn onClick={handleChat} />
-          </TemplateVarPanel>
+          <div className='mt-6 rounded-2xl border border-gray-200 bg-white p-6'>
+            <PromptTemplate html={highLightPromoptTemplate} />
+            <div className='mt-5'>
+              <ChatBtn onClick={handleChat} />
+            </div>
+          </div>
         </div>
       )
     }
     // private version
     return (
-      <TemplateVarPanel
-        isFold={false}
-        header={
-          <AppInfoComp siteInfo={siteInfo} />
-        }
-      >
-        <ChatBtn onClick={handleChat} />
-      </TemplateVarPanel>
+      <div>
+        <AppInfoComp siteInfo={siteInfo} />
+        <div className='mt-6'>
+          <ChatBtn onClick={handleChat} />
+        </div>
+      </div>
     )
   }
 
   const renderVarPanel = () => {
     return (
-      <TemplateVarPanel
-        isFold={false}
-        header={
-          <AppInfoComp siteInfo={siteInfo} />
-        }
-      >
-        {renderInputs()}
-        <ChatBtn
-          className='mt-3 mobile:ml-0 tablet:ml-[128px]'
-          onClick={handleChat}
-        />
-      </TemplateVarPanel>
+      <div>
+        <AppInfoComp siteInfo={siteInfo} />
+        <div className='mt-6 rounded-2xl border border-gray-200 bg-white p-6'>
+          {renderInputs()}
+          <div className='mt-6'>
+            <ChatBtn onClick={handleChat} />
+          </div>
+        </div>
+      </div>
     )
   }
 
   const renderVarOpBtnGroup = () => {
     return (
-      <VarOpBtnGroup
-        onConfirm={() => {
-          if (!canChat()) { return }
+      <div className='flex mt-5 space-x-2 text-sm'>
+        <button
+          type='button'
+          className='flex items-center gap-1.5 rounded-lg h-9 px-4 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 cursor-pointer transition-colors'
+          onClick={() => {
+            if (!canChat()) { return }
 
-          onInputsChange(inputs)
-          setIsFold(true)
-        }}
-        onCancel={() => {
-          setInputs(savedInputs)
-          setIsFold(true)
-        }}
-      />
+            onInputsChange(inputs)
+            setIsFold(true)
+          }}
+        >
+          {t('common.operation.save')}
+        </button>
+        <button
+          type='button'
+          className='flex items-center rounded-lg h-9 px-4 text-sm font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors'
+          onClick={() => {
+            setInputs(savedInputs)
+            setIsFold(true)
+          }}
+        >
+          {t('common.operation.cancel')}
+        </button>
+      </div>
     )
   }
 
   const renderHasSetInputsPublic = () => {
     if (!canEditInputs) {
       return (
-        <TemplateVarPanel
-          isFold={false}
-          header={
-            <>
-              <PanelTitle
-                title={t('app.chat.publicPromptConfigTitle')}
-                className='mb-1'
-              />
-              <PromptTemplate html={highLightPromoptTemplate} />
-            </>
-          }
-        />
+        <div className='rounded-2xl border border-gray-200 bg-white p-5'>
+          <PromptTemplate html={highLightPromoptTemplate} />
+        </div>
       )
     }
 
     return (
-      <TemplateVarPanel
-        isFold={isFold}
-        header={
-          <>
-            <PanelTitle
-              title={t('app.chat.publicPromptConfigTitle')}
-              className='mb-1'
-            />
-            <PromptTemplate html={highLightPromoptTemplate} />
-            {isFold && (
-              <div className='flex items-center justify-between mt-3 border-t border-indigo-100 pt-4 text-xs text-indigo-600'>
-                <span className='text-gray-700'>{t('app.chat.configStatusDes')}</span>
-                <EditBtn onClick={() => setIsFold(false)} />
-              </div>
-            )}
-          </>
-        }
-      >
-        {renderInputs()}
-        {renderVarOpBtnGroup()}
-      </TemplateVarPanel>
+      <div className='rounded-2xl border border-gray-200 bg-white'>
+        <div className='p-5'>
+          <PromptTemplate html={highLightPromoptTemplate} />
+          {isFold && (
+            <div className='flex items-center justify-between mt-4 border-t border-gray-100 pt-4 text-xs text-gray-500'>
+              <span>{t('app.chat.configStatusDes')}</span>
+              <EditBtn onClick={() => setIsFold(false)} />
+            </div>
+          )}
+        </div>
+        {!isFold && (
+          <div className='border-t border-gray-100 p-5'>
+            {renderInputs()}
+            {renderVarOpBtnGroup()}
+          </div>
+        )}
+      </div>
     )
   }
 
@@ -320,22 +307,22 @@ const Welcome: FC<IWelcomeProps> = ({
     if (!canEditInputs || !hasVar) { return null }
 
     return (
-      <TemplateVarPanel
-        isFold={isFold}
-        header={
-          <div className='flex items-center justify-between text-indigo-600'>
-            <PanelTitle
-              title={!isFold ? t('app.chat.privatePromptConfigTitle') : t('app.chat.configStatusDes')}
-            />
-            {isFold && (
-              <EditBtn onClick={() => setIsFold(false)} />
-            )}
+      <div className='rounded-2xl border border-gray-200 bg-white'>
+        <div className='flex items-center justify-between p-5 text-gray-500'>
+          <span className='text-xs font-medium uppercase tracking-wide'>
+            {!isFold ? t('app.chat.privatePromptConfigTitle') : t('app.chat.configStatusDes')}
+          </span>
+          {isFold && (
+            <EditBtn onClick={() => setIsFold(false)} />
+          )}
+        </div>
+        {!isFold && (
+          <div className='border-t border-gray-100 p-5'>
+            {renderInputs()}
+            {renderVarOpBtnGroup()}
           </div>
-        }
-      >
-        {renderInputs()}
-        {renderVarOpBtnGroup()}
-      </TemplateVarPanel>
+        )}
+      </div>
     )
   }
 
@@ -343,9 +330,7 @@ const Welcome: FC<IWelcomeProps> = ({
     if ((!isPublicVersion && !canEditInputs) || !hasVar) { return null }
 
     return (
-      <div
-        className='pt-[88px] mb-5'
-      >
+      <div className='pt-14 pb-5'>
         {isPublicVersion ? renderHasSetInputsPublic() : renderHasSetInputsPrivate()}
       </div>)
   }
@@ -357,7 +342,7 @@ const Welcome: FC<IWelcomeProps> = ({
         {/*  Has't set inputs  */}
         {
           !hasSetInputs && (
-            <div className='mobile:pt-[72px] tablet:pt-[128px] pc:pt-[200px]'>
+            <div className='pc:pt-[15vh] tablet:pt-[12vh] mobile:pt-[10vh]'>
               {hasVar
                 ? (
                   renderVarPanel()
@@ -374,12 +359,11 @@ const Welcome: FC<IWelcomeProps> = ({
 
         {/* foot */}
         {!hasSetInputs && (
-          <div className='mt-4 flex justify-between items-center h-8 text-xs text-gray-400'>
-
+          <div className='mt-6 flex justify-between items-center h-8 text-xs text-gray-400'>
             {siteInfo.privacy_policy
               ? <div>{t('app.chat.privacyPolicyLeft')}
                 <a
-                  className='text-gray-500'
+                  className='text-gray-500 hover:text-gray-700 transition-colors'
                   href={siteInfo.privacy_policy}
                   target='_blank'
                 >{t('app.chat.privacyPolicyMiddle')}</a>

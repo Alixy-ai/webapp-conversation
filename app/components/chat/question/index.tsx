@@ -27,7 +27,7 @@ const Question: FC<IQuestionProps> = ({ id, content, useCurrentUserAvatar, files
   return (
     <div className='flex gap-3 items-start justify-end' key={id}>
       <div className='flex flex-col items-end max-w-[85%]'>
-        <div className='px-4 py-2.5 bg-primary-600 text-white text-sm rounded-2xl rounded-br-md shadow-sm'>
+        <div className='px-4 py-2.5 bg-gray-900 text-white text-sm rounded-2xl rounded-br-md'>
           {imageSrcs.length > 0 && (
             <ImageGallery srcs={imageSrcs} />
           )}
@@ -50,7 +50,7 @@ const Question: FC<IQuestionProps> = ({ id, content, useCurrentUserAvatar, files
       <div className='shrink-0 w-8 h-8'>
         {useCurrentUserAvatar
           ? (
-            <div className='flex items-center justify-center w-8 h-8 rounded-full bg-primary-600 text-white text-sm font-medium'>
+            <div className='flex items-center justify-center w-8 h-8 rounded-full bg-gray-900 text-white text-sm font-medium'>
               {userName?.[0]?.toLocaleUpperCase()}
             </div>
           )

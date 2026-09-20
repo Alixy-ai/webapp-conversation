@@ -53,35 +53,35 @@ const Tool: FC<Props> = ({
   const icon = getIcon(toolName, allToolIcons) as any
   return (
     <div>
-      <div className={cn(!isShowDetail && 'shadow-sm', !isShowDetail && 'inline-block', 'max-w-full overflow-x-auto bg-white rounded-md')}>
+      <div className={cn(!isShowDetail && 'border-gray-200/90', !isShowDetail && 'border', 'max-w-full overflow-x-auto bg-white rounded-md', isShowDetail && 'border-gray-200/90 border')}>
         <div
           className={cn('flex items-center h-7 px-2 cursor-pointer')}
           onClick={() => setIsShowDetail(!isShowDetail)}
         >
           {!isFinished && (
-            <Loading02 className='w-3 h-3 text-gray-500 animate-spin shrink-0' />
+            <Loading02 className='w-3 h-3 text-gray-400 animate-spin shrink-0' />
           )}
           {isFinished && !isShowDetail && (
-            <CheckCircle className='w-3 h-3 text-[#12B76A] shrink-0' />
+            <CheckCircle className='w-3 h-3 text-emerald-500 shrink-0' />
           )}
           {isFinished && isShowDetail && (
             icon
           )}
-          <span className='mx-1 text-xs font-medium text-gray-500 shrink-0'>
+          <span className='mx-1 text-xs font-medium text-gray-400 shrink-0'>
             {t(`tools.thought.${isFinished ? 'used' : 'using'}`)}
           </span>
           <span
-            className='text-xs font-medium text-gray-700 truncate'
+            className='text-xs font-medium text-gray-600 truncate'
             title={toolName}
           >
             {toolName}
           </span>
           <ChevronDown
-            className={cn(isShowDetail && 'rotate-180', 'ml-1 w-3 h-3 text-gray-500 select-none cursor-pointer shrink-0')}
+            className={cn(isShowDetail && 'rotate-180', 'ml-1 w-3 h-3 text-gray-400 select-none cursor-pointer shrink-0')}
           />
         </div>
         {isShowDetail && (
-          <div className='border-t border-black/5 p-2 space-y-2 '>
+          <div className='border-t border-gray-100 p-2 space-y-2 '>
             <Panel
               isRequest={true}
               toolName={toolName}

@@ -6,6 +6,8 @@ const translation = {
   },
   chat: {
     newChat: 'New chat',
+    collapseSidebar: 'Collapse sidebar',
+    expandSidebar: 'Expand sidebar',
     newChatDefaultName: 'New conversation',
     inputPlaceholder: 'Send a message…',
     openingStatementTitle: 'Opening statement',

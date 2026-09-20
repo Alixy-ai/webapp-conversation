@@ -6,6 +6,8 @@ const translation = {
   },
   chat: {
     newChat: '新对话',
+    collapseSidebar: '收起侧栏',
+    expandSidebar: '展开侧栏',
     newChatDefaultName: '新的对话',
     inputPlaceholder: '输入消息…',
     openingStatementTitle: '对话开场白',

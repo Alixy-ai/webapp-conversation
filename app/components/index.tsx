@@ -7,8 +7,8 @@ import { useBoolean, useGetState } from 'ahooks'
 import useConversation from '@/hooks/use-conversation'
 import Toast from '@/app/components/base/toast'
 import Sidebar from '@/app/components/sidebar'
+import { Bars3Icon } from '@heroicons/react/24/outline'
 import ConfigSence from '@/app/components/config-scence'
-import Header from '@/app/components/header'
 import { fetchAppParams, fetchChatList, fetchConversations, generationConversationName, sendChatMessage, updateFeedback } from '@/service'
 import type { ChatItem, ConversationItem, Feedbacktype, PromptConfig, VisionFile, VisionSettings } from '@/types/app'
 import type { FileUpload } from '@/app/components/base/file-uploader-in-attachment/types'
@@ -53,6 +53,7 @@ const Main: FC<IMainProps> = () => {
   const [inited, setInited] = useState<boolean>(false)
   // in mobile, show sidebar by click button
   const [isShowSidebar, { setTrue: showSidebar, setFalse: hideSidebar }] = useBoolean(false)
+  const [isSidebarCollapsed, { toggle: toggleSidebarCollapsed }] = useBoolean(false)
   const [visionConfig, setVisionConfig] = useState<VisionSettings | undefined>({
     enabled: false,
     number_limits: 2,
@@ -318,7 +319,7 @@ const Main: FC<IMainProps> = () => {
     let emptyRequiredInput = false
     promptConfig.prompt_variables.forEach((item) => {
       if (item.required && !currInputs[item.key])
-        emptyRequiredInput = true
+      { emptyRequiredInput = true }
     })
 
     if (emptyRequiredInput) {
@@ -658,6 +659,11 @@ const Main: FC<IMainProps> = () => {
         onCurrentIdChange={handleConversationIdChange}
         currentId={currConversationId}
         copyRight={APP_INFO.copyright || APP_INFO.title}
+        collapsed={isSidebarCollapsed}
+        onToggleCollapsed={() => {
+          if (isMobile) { hideSidebar() }
+          else { toggleSidebarCollapsed() }
+        }}
       />
     )
   }
@@ -667,52 +673,54 @@ const Main: FC<IMainProps> = () => {
   if (!APP_ID || !APP_INFO || !promptConfig) { return <Loading type='app' /> }
 
   return (
-    <div className='bg-gray-100'>
-      <Header
-        title={APP_INFO.title}
-        isMobile={isMobile}
-        onShowSideBar={showSidebar}
-        onCreateNewChat={() => handleConversationIdChange('-1')}
-      />
-      <div className="flex rounded-t-2xl bg-white overflow-hidden">
-        {/* sidebar */}
-        {!isMobile && renderSidebar()}
-        {isMobile && isShowSidebar && (
-          <div className='fixed inset-0 z-50' style={{ backgroundColor: 'rgba(35, 56, 118, 0.2)' }} onClick={hideSidebar} >
-            <div className='inline-block' onClick={e => e.stopPropagation()}>
-              {renderSidebar()}
-            </div>
+    <div className='h-screen flex bg-white text-gray-900 overflow-hidden'>
+      {/* mobile: floating drawer button */}
+      {isMobile && !isShowSidebar && (
+        <button
+          type='button'
+          onClick={showSidebar}
+          className='fixed top-3 left-3 z-40 flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white shadow-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer'
+        >
+          <Bars3Icon className='h-5 w-5' />
+        </button>
+      )}
+      {/* desktop sidebar / mobile drawer */}
+      {!isMobile && renderSidebar()}
+      {isMobile && isShowSidebar && (
+        <div className='fixed inset-0 z-50 flex bg-gray-900/25 backdrop-blur-[2px]' onClick={hideSidebar} >
+          <div className='h-full' onClick={e => e.stopPropagation()}>
+            {renderSidebar()}
           </div>
-        )}
-        {/* main */}
-        <div className='flex-grow flex flex-col h-[calc(100vh_-_3rem)] overflow-y-auto'>
-          <ConfigSence
-            conversationName={conversationName}
-            hasSetInputs={hasSetInputs}
-            isPublicVersion={isShowPrompt}
-            siteInfo={APP_INFO}
-            promptConfig={promptConfig}
-            onStartChat={handleStartChat}
-            canEditInputs={canEditInputs}
-            savedInputs={currInputs as Record<string, any>}
-            onInputsChange={setCurrInputs}
-          ></ConfigSence>
-
-          {
-            hasSetInputs && (
-              <div className='relative grow pc:w-[794px] max-w-full mobile:w-full px-3.5 mx-auto mb-3.5' ref={chatListDomRef}>
-                <Chat
-                  chatList={chatList}
-                  onSend={handleSend}
-                  onFeedback={handleFeedback}
-                  isResponding={isResponding}
-                  checkCanSend={checkCanSend}
-                  visionConfig={visionConfig}
-                  fileConfig={fileConfig}
-                />
-              </div>)
-          }
         </div>
+      )}
+      {/* main */}
+      <div className="flex-grow flex flex-col min-h-0 min-w-0 overflow-y-auto">
+        <ConfigSence
+          conversationName={conversationName}
+          hasSetInputs={hasSetInputs}
+          isPublicVersion={isShowPrompt}
+          siteInfo={APP_INFO}
+          promptConfig={promptConfig}
+          onStartChat={handleStartChat}
+          canEditInputs={canEditInputs}
+          savedInputs={currInputs as Record<string, any>}
+          onInputsChange={setCurrInputs}
+        ></ConfigSence>
+
+        {
+          hasSetInputs && (
+            <div className='relative grow pc:w-[794px] max-w-full mobile:w-full px-3.5 mx-auto mb-3.5' ref={chatListDomRef}>
+              <Chat
+                chatList={chatList}
+                onSend={handleSend}
+                onFeedback={handleFeedback}
+                isResponding={isResponding}
+                checkCanSend={checkCanSend}
+                visionConfig={visionConfig}
+                fileConfig={fileConfig}
+              />
+            </div>)
+        }
       </div>
     </div>
   )

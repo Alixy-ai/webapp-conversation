@@ -14,13 +14,11 @@ import { WorkflowRunningStatus } from '@/types/app'
 
 interface WorkflowProcessProps {
   data: WorkflowProcess
-  grayBg?: boolean
   expand?: boolean
   hideInfo?: boolean
 }
 const WorkflowProcessItem = ({
   data,
-  grayBg,
   expand = false,
   hideInfo = false,
 }: WorkflowProcessProps) => {
@@ -29,13 +27,19 @@ const WorkflowProcessItem = ({
   const succeeded = data.status === WorkflowRunningStatus.Succeeded
   const failed = data.status === WorkflowRunningStatus.Failed || data.status === WorkflowRunningStatus.Stopped
 
-  const background = useMemo(() => {
-    if (running && !collapse) { return 'linear-gradient(180deg, #E1E4EA 0%, #EAECF0 100%)' }
+  const statusText = useMemo(() => {
+    if (running) { return 'Running…' }
+    if (succeeded) { return 'Completed' }
+    if (failed) { return 'Failed' }
+    return ''
+  }, [running, succeeded, failed])
 
-    if (succeeded && !collapse) { return 'linear-gradient(180deg, #ECFDF3 0%, #F6FEF9 100%)' }
-
-    if (failed && !collapse) { return 'linear-gradient(180deg, #FEE4E2 0%, #FEF3F2 100%)' }
-  }, [running, succeeded, failed, collapse])
+  const statusColor = useMemo(() => {
+    if (running) { return 'text-gray-500' }
+    if (succeeded) { return 'text-emerald-600' }
+    if (failed) { return 'text-red-500' }
+    return 'text-gray-500'
+  }, [running, succeeded, failed])
 
   useEffect(() => {
     setCollapse(!expand)
@@ -44,39 +48,35 @@ const WorkflowProcessItem = ({
   return (
     <div
       className={cn(
-        'mb-2 rounded-xl border-[0.5px] border-black/[0.08]',
-        collapse ? 'py-[7px]' : hideInfo ? 'pt-2 pb-1' : 'py-2',
-        collapse && (!grayBg ? 'bg-white' : 'bg-gray-50'),
-        hideInfo ? 'mx-[-8px] px-1' : 'w-full px-3',
+        'mb-2 rounded-lg border border-gray-200/90 bg-gray-25',
+        hideInfo ? 'py-[7px]' : 'py-2',
       )}
-      style={{
-        background,
-      }}
     >
       <div
         className={cn(
-          'flex items-center h-[18px] cursor-pointer',
-          hideInfo && 'px-[6px]',
+          'flex items-center h-[18px] cursor-pointer select-none',
+          hideInfo && 'px-2',
         )}
         onClick={() => setCollapse(!collapse)}
       >
         {
           running && (
-            <Loading02 className='shrink-0 mr-1 w-3 h-3 text-[#667085] animate-spin' />
+            <Loading02 className='shrink-0 mr-1.5 w-3 h-3 text-gray-400 animate-spin' />
           )
         }
         {
           succeeded && (
-            <CheckCircle className='shrink-0 mr-1 w-3 h-3 text-[#12B76A]' />
+            <CheckCircle className='shrink-0 mr-1.5 w-3 h-3 text-emerald-500' />
           )
         }
         {
           failed && (
-            <AlertCircle className='shrink-0 mr-1 w-3 h-3 text-[#F04438]' />
+            <AlertCircle className='shrink-0 mr-1.5 w-3 h-3 text-red-500' />
           )
         }
-        <div className='grow text-xs font-medium text-gray-700 leading-[18px]'>Workflow Process</div>
-        <ChevronRight className={`'ml-1 w-3 h-3 text-gray-500' ${collapse ? '' : 'rotate-90'}`} />
+        <div className='grow text-xs font-medium text-gray-500 leading-[18px]'>Workflow Process</div>
+        <span className={cn('shrink-0 mr-2 text-[11px] font-medium leading-[18px] hidden mobile:inline', statusColor)}>{statusText}</span>
+        <ChevronRight className={`'ml-1 w-3 h-3 text-gray-400' ${collapse ? '' : 'rotate-90'}`} />
       </div>
       {
         !collapse && (

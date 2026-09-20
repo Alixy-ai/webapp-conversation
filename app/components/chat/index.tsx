@@ -263,7 +263,7 @@ const Chat: FC<IChatProps> = ({
                         className={cn(
                           'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors',
                           canSubmit
-                            ? 'cursor-pointer bg-primary-600 text-white hover:bg-primary-700'
+                            ? 'cursor-pointer bg-gray-900 text-white hover:bg-gray-700'
                             : 'cursor-default bg-gray-100 text-gray-400',
                         )}
                         onClick={handleSend}
