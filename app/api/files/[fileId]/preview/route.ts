@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server'
-import { API_KEY, API_URL } from '@/config'
+import { API_KEY, API_URL } from '@/config/server'
 
 /**
  * Proxy the Dify file preview endpoint through this app.

@@ -4,17 +4,20 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 ## Config App
 Create a file named `.env.local` in the current directory and copy the contents from `.env.example`. Setting the following content:
 ```
-# APP ID: This is the unique identifier for your app. You can find it in the app's detail page URL. 
+# APP ID: shown in the browser, safe to expose.
+# This is the unique identifier for your app, found in the app's detail page URL.
 # For example, in the URL `https://cloud.dify.ai/app/xxx/workflow`, the value `xxx` is your APP ID.
 NEXT_PUBLIC_APP_ID=
 
-# APP API Key: This is the key used to authenticate your app's API requests. 
+# APP API key: server-side only, NEVER prefix it with NEXT_PUBLIC_.
 # You can generate it on the app's "API Access" page by clicking the "API Key" button in the top-right corner.
-NEXT_PUBLIC_APP_KEY=
+APP_KEY=
 
-# APP URL: This is the API's base URL. If you're using the Dify cloud service, set it to: https://api.dify.ai/v1.
-NEXT_PUBLIC_API_URL=
+# API base URL: server-side only. If you're using the Dify cloud service, set it to: https://api.dify.ai/v1.
+API_URL=
 ```
+
+> ⚠️ Only `NEXT_PUBLIC_APP_ID` may reach the browser. Anything prefixed with `NEXT_PUBLIC_` is inlined into the JavaScript bundle at build time, which would hand your Dify API key to every visitor. `APP_KEY` / `API_URL` are read by the server through `config/server.ts` and are never bundled for the client.
 
 Config more in `config/index.ts` file:   
 ```js
@@ -72,7 +75,11 @@ docker build . -t <DOCKER_HUB_REPO>/webapp-conversation:latest
 docker run -p 3000:3000 <DOCKER_HUB_REPO>/webapp-conversation:latest
 ```
 
-> ⚠️ `NEXT_PUBLIC_APP_ID` / `NEXT_PUBLIC_APP_KEY` / `NEXT_PUBLIC_API_URL` are inlined at build time, so `.env.local` has to be present in the build context when running `docker build`. Passing them at container start (`docker run -e ...`) is not enough.
+> ⚠️ `NEXT_PUBLIC_APP_ID` is inlined at build time, so it has to be present in the build context when running `docker build`. `APP_KEY` and `API_URL` are read by the server at runtime, so they can be injected per container instead — no rebuild needed:
+>
+> ```
+docker run -p 3000:3000 -e APP_KEY=app-xxx -e API_URL=https://api.dify.ai/v1 <DOCKER_HUB_REPO>/webapp-conversation:latest
+> ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
