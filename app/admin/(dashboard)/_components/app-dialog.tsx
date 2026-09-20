@@ -4,7 +4,7 @@ import type { FC } from 'react'
 import React, { useEffect, useState } from 'react'
 import { RiCheckLine, RiCloseLine } from '@remixicon/react'
 import type { PublicApp } from '@/lib/apps/types'
-import { AI_NOTICE_POSITIONS, AI_NOTICE_TEXT_MAX_LEN, DEFAULT_AI_NOTICE_POSITION } from '@/config'
+import { AI_NOTICE_POSITIONS, AI_NOTICE_TEXT_MAX_LEN, API_PREFIX, DEFAULT_AI_NOTICE_POSITION } from '@/config'
 import type { AiNoticePosition } from '@/config'
 
 export interface AppFormValues {
@@ -141,7 +141,7 @@ const AppDialog: FC<AppDialogProps> = ({
     if (form.apiUrl) { body.apiUrl = form.apiUrl }
 
     try {
-      const res = await fetch('/api/admin/apps', {
+      const res = await fetch(`${API_PREFIX}/admin/apps`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

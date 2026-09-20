@@ -80,6 +80,45 @@ The columns are added to an existing `apps` table automatically on startup
 (idempotent `ALTER TABLE`), and `AI_NOTICE_*` env vars only seed a brand-new
 registry.
 
+## Serving from a sub-path
+
+Set `NEXT_PUBLIC_BASE_PATH` to serve the whole app from a path instead of the domain root, e.g. `https://example.com/chatbot`:
+
+```bash
+# .env.local, or exported in the build environment
+NEXT_PUBLIC_BASE_PATH=/chatbot
+pnpm build && pnpm start
+```
+
+The value must start with `/` and must not end with one. It is inlined at build time — routes, `_next/static` URLs, API calls, links and cookies all follow it — so **changing it requires a rebuild**. Leaving it empty keeps the app on the domain root, byte for byte as before.
+
+It also has to be present when the server starts: `next start` applies `basePath` again at runtime, so a build made for `/chatbot` started without the variable would disagree with itself about every URL. Keeping the variable in `.env.local` covers both sides (and Docker inherits it twice, from the build context and from `env_file`).
+
+The reverse proxy has to forward the prefix untouched: `proxy_pass` may not carry a URI, otherwise `/chatbot` is stripped and the app answers 404.
+
+```nginx
+# no trailing slash after /chatbot — that form would miss the bare /chatbot URL
+location /chatbot {
+    # and nothing after the host either, or the /chatbot prefix gets stripped
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    # chat answers stream over SSE — buffering would hold them back until the end
+    proxy_buffering off;
+    proxy_cache off;
+    proxy_read_timeout 3600s;
+
+    # attachments and images are proxied through the app, so raise nginx's 1m default
+    client_max_body_size 20m;
+}
+```
+
+The admin console moves with it (`/chatbot/admin` instead of `/admin`), and `docker-compose.yml` probes the same prefix for its healthcheck.
+
 ### Admin sign in
 
 Set a password (hash preferred) and log in at `/admin`:

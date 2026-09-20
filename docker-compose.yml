@@ -48,7 +48,9 @@ services:
       - registry-data:/app/data
 
     healthcheck:
-      test: ['CMD', 'wget', '-q', '--spider', 'http://127.0.0.1:3000/']
+      # ${NEXT_PUBLIC_BASE_PATH} is expanded inside the container, so the probe
+      # follows a configured sub-path instead of always hitting the root.
+      test: ['CMD-SHELL', 'wget -q --spider "http://127.0.0.1:3000${NEXT_PUBLIC_BASE_PATH}/"']
       interval: 30s
       timeout: 5s
       retries: 3

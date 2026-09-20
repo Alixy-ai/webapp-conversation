@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { RiCloseLine, RiDeleteBinLine } from '@remixicon/react'
 
 import { useSelection } from './selection'
+import { API_PREFIX } from '@/config'
 
 type BulkAction = 'enable' | 'disable' | 'delete'
 
@@ -25,7 +26,7 @@ const BulkActions: FC = () => {
     setBusy(true)
     setError('')
     try {
-      const res = await fetch('/api/admin/apps/bulk', {
+      const res = await fetch(`${API_PREFIX}/admin/apps/bulk`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: selected, action }),

@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { RiLogoutBoxRLine } from '@remixicon/react'
 
+import { API_PREFIX } from '@/config'
+
 const SignOutButton = () => {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
@@ -12,7 +14,7 @@ const SignOutButton = () => {
     if (busy) { return }
     setBusy(true)
     try {
-      await fetch('/api/admin/auth/logout', { method: 'POST' })
+      await fetch(`${API_PREFIX}/admin/auth/logout`, { method: 'POST' })
       router.replace('/admin/login')
       router.refresh()
     }

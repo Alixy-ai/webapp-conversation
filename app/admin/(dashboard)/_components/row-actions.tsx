@@ -7,6 +7,7 @@ import { RiDeleteBinLine, RiEditLine } from '@remixicon/react'
 
 import AppDialog, { appToForm } from './app-dialog'
 import type { PublicApp } from '@/lib/apps/types'
+import { API_PREFIX } from '@/config'
 
 const action = 'flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50'
 
@@ -19,7 +20,7 @@ const RowActions: FC<{ app: PublicApp }> = ({ app }) => {
   const toggle = async () => {
     setBusy(true)
     try {
-      await fetch(`/api/admin/apps/${app.id}`, {
+      await fetch(`${API_PREFIX}/admin/apps/${app.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled: !app.enabled }),
@@ -38,7 +39,7 @@ const RowActions: FC<{ app: PublicApp }> = ({ app }) => {
     }
     setBusy(true)
     try {
-      await fetch(`/api/admin/apps/${app.id}`, { method: 'DELETE' })
+      await fetch(`${API_PREFIX}/admin/apps/${app.id}`, { method: 'DELETE' })
       setConfirming(false)
       router.refresh()
     }

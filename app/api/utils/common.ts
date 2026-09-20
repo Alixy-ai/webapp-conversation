@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 import { ChatClient } from 'dify-client'
 import { v4 } from 'uuid'
 import type { AppRecord } from '@/lib/apps/types'
+import { BASE_PATH } from '@/config'
 
 const createClient = (app: AppRecord) => new ChatClient(app.apiKey, app.apiUrl || undefined)
 const clients = new Map<string, ReturnType<typeof createClient>>()
@@ -30,11 +31,14 @@ export const getInfo = (request: NextRequest, app: AppRecord) => {
   }
 }
 
+/** Keeps the conversation cookie inside the sub-path, '/' when there is none. */
+const COOKIE_PATH = BASE_PATH || '/'
+
 export const setSession = (sessionId: string, app: AppRecord) => {
   if (app.disableSessionSameSite)
-  { return { 'Set-Cookie': `session_id=${sessionId}; SameSite=None; Secure` } }
+  { return { 'Set-Cookie': `session_id=${sessionId}; SameSite=None; Secure; Path=${COOKIE_PATH}` } }
 
-  return { 'Set-Cookie': `session_id=${sessionId}` }
+  return { 'Set-Cookie': `session_id=${sessionId}; Path=${COOKIE_PATH}` }
 }
 
 export const appNotFound = () => new Response('App not found', { status: 404 })

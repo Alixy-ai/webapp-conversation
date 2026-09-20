@@ -8,6 +8,13 @@ import { AppProvider } from '@/app/components/app-context'
 import { resolveApp } from '@/lib/apps/registry'
 import { toPublicApp } from '@/lib/apps/types'
 import { buildFaviconUrl } from '@/utils/branding'
+import { BASE_PATH } from '@/config'
+
+/** App-rooted favicon URLs ('/logo.png') follow the sub-path; data:/http(s) URLs pass through. */
+const faviconUrl = (icon: string) => {
+  const url = buildFaviconUrl(icon)
+  return url.startsWith('/') ? `${BASE_PATH}${url}` : url
+}
 
 interface IAppPageProps {
   params: Promise<{ slug: string }>
@@ -23,7 +30,7 @@ export async function generateMetadata({
   return {
     title: app.name,
     description: app.description,
-    icons: app.icon ? { icon: buildFaviconUrl(app.icon) } : undefined,
+    icons: app.icon ? { icon: faviconUrl(app.icon) } : undefined,
   }
 }
 

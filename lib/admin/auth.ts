@@ -2,6 +2,7 @@ import 'server-only'
 
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto'
 import type { NextRequest } from 'next/server'
+import { BASE_PATH } from '@/config'
 
 export const ADMIN_SESSION_COOKIE = 'admin_session'
 const SESSION_TTL_SECONDS = 60 * 60 * 12
@@ -88,7 +89,8 @@ export const sessionCookieOptions = (secure: boolean) => ({
   httpOnly: true,
   sameSite: 'lax' as const,
   secure,
-  path: '/',
+  // scoped to the app when it is served from a sub-path, '/' otherwise
+  path: BASE_PATH || '/',
   maxAge: SESSION_TTL_SECONDS,
 })
 

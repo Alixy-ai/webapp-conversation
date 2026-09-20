@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { RiLockLine } from '@remixicon/react'
 
+import { API_PREFIX } from '@/config'
+
 const input = 'block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-300 outline-none transition-shadow focus:border-primary-400 focus:ring-2 focus:ring-primary-500/15'
 const label = 'mb-1.5 block text-xs font-medium text-gray-600'
 
@@ -21,7 +23,7 @@ const LoginForm = () => {
     setError('')
 
     try {
-      const res = await fetch('/api/admin/auth/login', {
+      const res = await fetch(`${API_PREFIX}/admin/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),

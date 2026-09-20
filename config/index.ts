@@ -12,7 +12,15 @@ export const APP_INFO: AppInfo = {
 export const isShowPrompt = false
 export const promptTemplate = 'I want you to act as a javascript console.'
 
-export const API_PREFIX = '/api'
+/**
+ * Sub-path the app is served from, '' when it sits at the domain root.
+ * Set NEXT_PUBLIC_BASE_PATH=/chatbot to serve everything under /chatbot; the
+ * value must start with '/' and is inlined at build time (see next.config.js),
+ * so changing it needs a rebuild.
+ */
+export const BASE_PATH = (process.env.NEXT_PUBLIC_BASE_PATH || '').replace(/\/+$/, '')
+
+export const API_PREFIX = `${BASE_PATH}/api`
 
 export const LOCALE_COOKIE_NAME = 'locale'
 
