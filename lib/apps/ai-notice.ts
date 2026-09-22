@@ -1,17 +1,19 @@
 import 'server-only'
 
-import { AI_NOTICE_POSITIONS, AI_NOTICE_TEXT_MAX_LEN, isAiNoticePosition } from '@/config'
-import type { AiNoticePosition } from '@/config'
+import { AI_NOTICE_POSITIONS, AI_NOTICE_TEXT_MAX_LEN, WORKFLOW_DISPLAY_MODES, isAiNoticePosition, isWorkflowDisplayMode, workflowModeFromLegacy } from '@/config'
+import type { AiNoticePosition, WorkflowDisplayMode } from '@/config'
 
 export interface AiNoticeInput {
   aiNoticeEnabled?: boolean
   aiNoticeText?: string
   aiNoticePosition?: AiNoticePosition
+  workflowDisplayMode?: WorkflowDisplayMode
 }
 
 /**
- * Pick out the AI notice related fields from a request body.
- * A missing key means "keep the stored value"; an invalid value is an error.
+ * Pick out the AI notice related fields (and the workflow-visibility switch)
+ * from a request body. A missing key means "keep the stored value"; an
+ * invalid value is an error.
  */
 export const normalizeAiNotice = (body: Record<string, unknown>): { value: AiNoticeInput } | { error: string } => {
   const value: AiNoticeInput = {}
@@ -35,6 +37,24 @@ export const normalizeAiNotice = (body: Record<string, unknown>): { value: AiNot
       return { error: `aiNoticePosition must be one of ${AI_NOTICE_POSITIONS.join(', ')}` }
     }
     value.aiNoticePosition = body.aiNoticePosition
+  }
+
+  if (body.workflowDisplayMode !== undefined) {
+    if (typeof body.workflowDisplayMode === 'boolean') {
+      // legacy switch: keep old API clients working
+      value.workflowDisplayMode = workflowModeFromLegacy(body.workflowDisplayMode)
+    }
+    else if (!isWorkflowDisplayMode(body.workflowDisplayMode)) {
+      return { error: `workflowDisplayMode must be one of ${WORKFLOW_DISPLAY_MODES.join(', ')}` }
+    }
+    else {
+      value.workflowDisplayMode = body.workflowDisplayMode
+    }
+  }
+  else if (body.showWorkflowProcess !== undefined) {
+    // legacy boolean field from the previous release: true → full, false → off
+    if (typeof body.showWorkflowProcess !== 'boolean') { return { error: 'showWorkflowProcess must be a boolean' } }
+    value.workflowDisplayMode = workflowModeFromLegacy(body.showWorkflowProcess)
   }
 
   return { value }

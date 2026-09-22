@@ -80,6 +80,19 @@ The columns are added to an existing `apps` table automatically on startup
 (idempotent `ALTER TABLE`), and `AI_NOTICE_*` env vars only seed a brand-new
 registry.
 
+### Workflow process visibility
+
+`workflowDisplayMode` (per app, admin dialog "Workflow process") controls how
+the intermediate tool calls under an answer are rendered:
+
+- `full` — the collapsible Codex-style step list, expandable per node (default);
+- `names` — a single status line that cycles the node names upward while the
+  workflow runs and **freezes** the moment the answer text starts streaming;
+- `off` — only the quiet thinking header, no steps.
+
+The API also accepts the legacy boolean `showWorkflowProcess` (`true` → `full`,
+`false` → `off`). The column is backfilled automatically from it.
+
 ## Serving from a sub-path
 
 Set `NEXT_PUBLIC_BASE_PATH` to serve the whole app from a path instead of the domain root, e.g. `https://example.com/chatbot`:

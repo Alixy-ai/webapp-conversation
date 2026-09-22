@@ -1,4 +1,4 @@
-import type { AiNoticePosition } from '@/config'
+import type { AiNoticePosition, WorkflowDisplayMode } from '@/config'
 
 export interface AppRecord {
   id: string
@@ -17,6 +17,8 @@ export interface AppRecord {
   aiNoticeEnabled: boolean
   aiNoticeText: string
   aiNoticePosition: AiNoticePosition
+  /** how the workflow/tool trace under answers is rendered: full / names / off */
+  workflowDisplayMode: WorkflowDisplayMode
   enabled: boolean
   createdAt: number
   updatedAt: number
@@ -48,6 +50,8 @@ export interface PublicApp {
   aiNoticeEnabled: boolean
   aiNoticeText: string
   aiNoticePosition: AiNoticePosition
+  /** how the workflow/tool trace under answers is rendered: full / names / off */
+  workflowDisplayMode: WorkflowDisplayMode
   /** only the admin UI cares; the public pages filter disabled apps out */
   enabled: boolean
   /** epoch ms, shown in the admin table */
@@ -69,6 +73,7 @@ export const toPublicApp = (app: AppRecord): PublicApp => ({
   aiNoticeEnabled: app.aiNoticeEnabled,
   aiNoticeText: app.aiNoticeText,
   aiNoticePosition: app.aiNoticePosition,
+  workflowDisplayMode: app.workflowDisplayMode,
   enabled: app.enabled,
   updatedAt: app.updatedAt,
 })

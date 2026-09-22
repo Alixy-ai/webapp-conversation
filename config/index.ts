@@ -45,3 +45,14 @@ export const DEFAULT_AI_NOTICE_POSITION: AiNoticePosition = 'input_hint'
 export const AI_NOTICE_TEXT_MAX_LEN = 200
 export const isAiNoticePosition = (value: unknown): value is AiNoticePosition =>
   typeof value === 'string' && (AI_NOTICE_POSITIONS as readonly string[]).includes(value)
+
+// ── Workflow process display ───────────────────────────────────────────
+/** How the workflow/tool trace under answers is rendered for an app. */
+export const WORKFLOW_DISPLAY_MODES = ['full', 'names', 'off'] as const
+export type WorkflowDisplayMode = typeof WORKFLOW_DISPLAY_MODES[number]
+export const DEFAULT_WORKFLOW_DISPLAY_MODE: WorkflowDisplayMode = 'full'
+/** accepts the new enum or the legacy boolean switch */
+export const isWorkflowDisplayMode = (value: unknown): value is WorkflowDisplayMode =>
+  typeof value === 'string' && (WORKFLOW_DISPLAY_MODES as readonly string[]).includes(value)
+/** legacy boolean → new enum, keeps old API clients working */
+export const workflowModeFromLegacy = (show: boolean): WorkflowDisplayMode => show ? 'full' : 'off'

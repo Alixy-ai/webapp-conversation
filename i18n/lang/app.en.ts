@@ -12,6 +12,12 @@ const translation = {
     inputPlaceholder: 'Send a message…',
     openingStatementTitle: 'Opening statement',
     powerBy: 'Powered by',
+    workflow: {
+      thinking: 'Thinking…',
+      thought: 'Thought process',
+      thoughtFor: 'Thought for {{seconds}}',
+      failed: 'Workflow failed',
+    },
     aiNotice: {
       default: 'This content is AI generated. Please verify important information.',
     },

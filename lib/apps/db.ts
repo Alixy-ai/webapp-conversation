@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS apps (
   ai_notice_enabled INTEGER NOT NULL DEFAULT 0,
   ai_notice_text TEXT NOT NULL DEFAULT '',
   ai_notice_position TEXT NOT NULL DEFAULT 'input_hint',
+  show_workflow_process INTEGER NOT NULL DEFAULT 1,
+  workflow_display_mode TEXT NOT NULL DEFAULT 'full',
   enabled INTEGER NOT NULL DEFAULT 1,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
@@ -35,6 +37,8 @@ const AI_NOTICE_COLUMNS: Array<[string, string]> = [
   ['ai_notice_enabled', 'INTEGER NOT NULL DEFAULT 0'],
   ['ai_notice_text', 'TEXT NOT NULL DEFAULT \'\''],
   ['ai_notice_position', 'TEXT NOT NULL DEFAULT \'input_hint\''],
+  ['show_workflow_process', 'INTEGER NOT NULL DEFAULT 1'],
+  ['workflow_display_mode', 'TEXT NOT NULL DEFAULT \'full\''],
 ]
 
 /**
@@ -48,6 +52,13 @@ const migrate = (db: DatabaseSync) => {
   )
   for (const [name, definition] of AI_NOTICE_COLUMNS) {
     if (!existing.has(name)) { db.exec(`ALTER TABLE apps ADD COLUMN ${name} ${definition}`) }
+  }
+  // Backfill the enum from the legacy boolean column: 0 → 'off', otherwise
+  // 'full' ("names" is new and cannot be derived from a boolean). Only the
+  // rows the ALTER left at the column default are rewritten, so an explicit
+  // value is never clobbered, and running twice is a no-op.
+  if (!existing.has('workflow_display_mode')) {
+    db.exec('UPDATE apps SET workflow_display_mode = CASE WHEN show_workflow_process = 0 THEN \'off\' ELSE \'full\' END')
   }
 }
 

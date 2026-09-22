@@ -163,6 +163,11 @@ const Main: FC<IMainProps> = ({ app }: IMainProps) => {
             message_files: withLocalPreviewUrl(item.message_files?.filter((file: any) => file.belongs_to === 'user'), app.slug),
 
           })
+          // The history endpoint does not return workflow tracing, so keep the
+          // process data this browser already collected for the same message:
+          // without this the "thinking" block disappears as soon as the answer
+          // completes and the conversation list refetches.
+          const localProcess = getChatList().find(local => local.id === item.id)?.workflowProcess
           newChatList.push({
             id: item.id,
             content: item.answer,
@@ -170,6 +175,7 @@ const Main: FC<IMainProps> = ({ app }: IMainProps) => {
             feedback: item.feedback,
             isAnswer: true,
             message_files: withLocalPreviewUrl(item.message_files?.filter((file: any) => file.belongs_to === 'assistant'), app.slug),
+            ...(localProcess ? { workflowProcess: localProcess } : {}),
           })
         })
         setChatList(newChatList)

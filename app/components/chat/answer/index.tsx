@@ -86,7 +86,7 @@ const Answer: FC<IAnswerProps> = ({
   const isAgentMode = !!agent_thoughts && agent_thoughts.length > 0
 
   const { t } = useTranslation()
-  const { icon, iconBackground } = useApp()
+  const { icon, iconBackground, workflowDisplayMode } = useApp()
 
   /**
    * Render feedback results (distinguish between users and administrators)
@@ -192,9 +192,12 @@ const Answer: FC<IAnswerProps> = ({
         <div className='flex-1 min-w-0'>
           <div className='relative text-sm text-gray-800 max-w-full'>
             {workflowProcess && (
-              <div className='mb-2'>
-                <WorkflowProcess data={workflowProcess} hideInfo />
-              </div>
+              <WorkflowProcess
+                data={workflowProcess}
+                hideInfo
+                displayMode={workflowDisplayMode}
+                answerStarted={isResponding && !!content}
+              />
             )}
             {(isResponding && (isAgentMode ? (!content && (agent_thoughts || []).filter(item => !!item.thought || !!item.tool).length === 0) : !content))
               ? (

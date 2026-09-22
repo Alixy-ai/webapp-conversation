@@ -4,8 +4,8 @@ import type { FC } from 'react'
 import React, { useEffect, useState } from 'react'
 import { RiCheckLine, RiCloseLine } from '@remixicon/react'
 import type { PublicApp } from '@/lib/apps/types'
-import { AI_NOTICE_POSITIONS, AI_NOTICE_TEXT_MAX_LEN, API_PREFIX, DEFAULT_AI_NOTICE_POSITION } from '@/config'
-import type { AiNoticePosition } from '@/config'
+import { AI_NOTICE_POSITIONS, AI_NOTICE_TEXT_MAX_LEN, API_PREFIX, DEFAULT_AI_NOTICE_POSITION, WORKFLOW_DISPLAY_MODES } from '@/config'
+import type { AiNoticePosition, WorkflowDisplayMode } from '@/config'
 
 export interface AppFormValues {
   id: string
@@ -23,6 +23,7 @@ export interface AppFormValues {
   aiNoticeEnabled: boolean
   aiNoticeText: string
   aiNoticePosition: AiNoticePosition
+  workflowDisplayMode: WorkflowDisplayMode
   enabled: boolean
 }
 
@@ -42,6 +43,7 @@ export const emptyAppForm = (): AppFormValues => ({
   aiNoticeEnabled: false,
   aiNoticeText: '',
   aiNoticePosition: DEFAULT_AI_NOTICE_POSITION,
+  workflowDisplayMode: 'full',
   enabled: true,
 })
 
@@ -61,6 +63,7 @@ export const appToForm = (app: PublicApp): AppFormValues => ({
   aiNoticeEnabled: app.aiNoticeEnabled,
   aiNoticeText: app.aiNoticeText,
   aiNoticePosition: app.aiNoticePosition,
+  workflowDisplayMode: app.workflowDisplayMode,
   enabled: app.enabled,
 })
 
@@ -70,6 +73,18 @@ const label = 'mb-1.5 block text-xs font-medium text-gray-600'
 export const AI_NOTICE_POSITION_LABELS: Record<AiNoticePosition, string> = {
   input_hint: 'Below the input box (hint)',
   answer_footer: 'Below every answer',
+}
+
+export const WORKFLOW_MODE_LABELS: Record<WorkflowDisplayMode, string> = {
+  full: 'Full trace — every step with its details',
+  names: 'Node names only — one scrolling status line, frozen once the answer starts',
+  off: 'Hidden — only the thinking state',
+}
+
+const WORKFLOW_MODE_DESCRIPTIONS: Record<WorkflowDisplayMode, string> = {
+  full: 'The full Codex-style collapsible step list, expandable per node.',
+  names: 'A single line that cycles through the node names as they run; it stops cycling and freezes as soon as the answer text starts streaming.',
+  off: 'Visitors only ever see the thinking/waiting header.',
 }
 
 interface AppDialogProps {
@@ -134,6 +149,7 @@ const AppDialog: FC<AppDialogProps> = ({
       aiNoticeEnabled: form.aiNoticeEnabled,
       aiNoticeText: form.aiNoticeText.trim(),
       aiNoticePosition: form.aiNoticePosition,
+      workflowDisplayMode: form.workflowDisplayMode,
       enabled: form.enabled,
     }
     // blank means "keep what is stored" — the key never leaves the server
@@ -310,6 +326,28 @@ const AppDialog: FC<AppDialogProps> = ({
               <input type='checkbox' className='h-3.5 w-3.5 rounded border-gray-300' checked={form.showPoweredBy} onChange={e => set('showPoweredBy', e.target.checked)} />
               Show &ldquo;Powered by Dify&rdquo;
             </label>
+          </div>
+
+          <p className='mt-6 text-[11px] font-medium uppercase tracking-wide text-gray-400'>Workflow process</p>
+          <div className='mt-3'>
+            <label className={label}>How tool calls are shown while the assistant works</label>
+            <div className='mt-1 space-y-1.5'>
+              {WORKFLOW_DISPLAY_MODES.map(mode => (
+                <label key={mode} className='flex items-center gap-2 text-xs text-gray-600'>
+                  <input
+                    type='radio'
+                    name='workflow-display-mode'
+                    className='h-3.5 w-3.5 border-gray-300'
+                    checked={form.workflowDisplayMode === mode}
+                    onChange={() => set('workflowDisplayMode', mode)}
+                  />
+                  {WORKFLOW_MODE_LABELS[mode]}
+                </label>
+              ))}
+            </div>
+            <p className='mt-1.5 text-[11px] leading-4 text-gray-400'>
+              {WORKFLOW_MODE_DESCRIPTIONS[form.workflowDisplayMode]}
+            </p>
           </div>
 
           {

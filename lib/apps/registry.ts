@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { APP_INFO, DEFAULT_AI_NOTICE_POSITION, appIcon, appIconBackground, isAiNoticePosition, isShowPoweredBy } from '@/config'
+import { APP_INFO, DEFAULT_AI_NOTICE_POSITION, DEFAULT_WORKFLOW_DISPLAY_MODE, appIcon, appIconBackground, isAiNoticePosition, isShowPoweredBy, isWorkflowDisplayMode, workflowModeFromLegacy } from '@/config'
 import { AI_NOTICE } from '@/config/server'
 import { getDb } from './db'
 import type { AppInput, AppRecord } from './types'
@@ -22,6 +22,7 @@ const fromRow = (row: Record<string, any>): AppRecord => ({
   aiNoticeEnabled: !!row.ai_notice_enabled,
   aiNoticeText: row.ai_notice_text ?? '',
   aiNoticePosition: isAiNoticePosition(row.ai_notice_position) ? row.ai_notice_position : DEFAULT_AI_NOTICE_POSITION,
+  workflowDisplayMode: isWorkflowDisplayMode(row.workflow_display_mode) ? row.workflow_display_mode : (row.show_workflow_process === 0 ? 'off' : DEFAULT_WORKFLOW_DISPLAY_MODE),
   enabled: !!row.enabled,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
@@ -64,6 +65,7 @@ export const upsertApp = (input: AppInput): AppRecord => {
     aiNoticeEnabled: input.aiNoticeEnabled ?? existing?.aiNoticeEnabled ?? false,
     aiNoticeText: input.aiNoticeText ?? existing?.aiNoticeText ?? '',
     aiNoticePosition: input.aiNoticePosition ?? existing?.aiNoticePosition ?? DEFAULT_AI_NOTICE_POSITION,
+    workflowDisplayMode: input.workflowDisplayMode ?? existing?.workflowDisplayMode ?? DEFAULT_WORKFLOW_DISPLAY_MODE,
     enabled: input.enabled ?? existing?.enabled ?? true,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
@@ -73,9 +75,9 @@ export const upsertApp = (input: AppInput): AppRecord => {
     INSERT INTO apps (
       id, slug, name, description, copyright, privacy_policy, default_language,
       disable_session_same_site, api_key, api_url, icon, icon_background,
-      show_powered_by, ai_notice_enabled, ai_notice_text, ai_notice_position,
+      show_powered_by, ai_notice_enabled, ai_notice_text, ai_notice_position, show_workflow_process, workflow_display_mode,
       enabled, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       slug = excluded.slug,
       name = excluded.name,
@@ -92,6 +94,8 @@ export const upsertApp = (input: AppInput): AppRecord => {
       ai_notice_enabled = excluded.ai_notice_enabled,
       ai_notice_text = excluded.ai_notice_text,
       ai_notice_position = excluded.ai_notice_position,
+      show_workflow_process = excluded.show_workflow_process,
+      workflow_display_mode = excluded.workflow_display_mode,
       enabled = excluded.enabled,
       updated_at = excluded.updated_at
   `).run(
@@ -111,6 +115,8 @@ export const upsertApp = (input: AppInput): AppRecord => {
     merged.aiNoticeEnabled ? 1 : 0,
     merged.aiNoticeText,
     merged.aiNoticePosition,
+    merged.showPoweredBy === false && merged.workflowDisplayMode === 'off' ? 0 : 1,
+    merged.workflowDisplayMode,
     merged.enabled ? 1 : 0,
     merged.createdAt,
     merged.updatedAt,
@@ -240,6 +246,9 @@ const seedFromEnv = () => {
     aiNoticeEnabled: AI_NOTICE.enabled,
     aiNoticeText: AI_NOTICE.text,
     aiNoticePosition: AI_NOTICE.position,
+    workflowDisplayMode: process.env.WORKFLOW_DISPLAY_MODE && isWorkflowDisplayMode(process.env.WORKFLOW_DISPLAY_MODE)
+      ? process.env.WORKFLOW_DISPLAY_MODE
+      : workflowModeFromLegacy(process.env.SHOW_WORKFLOW_PROCESS !== 'false'),
     enabled: true,
   })
 }

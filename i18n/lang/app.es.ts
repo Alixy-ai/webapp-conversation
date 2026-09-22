@@ -9,6 +9,12 @@ const translation = {
     newChatDefaultName: 'Nueva conversación',
     openingStatementTitle: 'Frase de apertura',
     powerBy: 'Desarrollado por',
+    workflow: {
+      thinking: 'Pensando…',
+      thought: 'Proceso de razonamiento',
+      thoughtFor: 'Pensó durante {{seconds}}',
+      failed: 'El flujo de trabajo falló',
+    },
     aiNotice: {
       default: 'Este contenido es generado por IA. Verifica la información importante.',
     },

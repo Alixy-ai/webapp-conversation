@@ -9,6 +9,12 @@ const translation = {
     newChatDefaultName: 'Cuộc trò chuyện mới',
     openingStatementTitle: 'Lời mở đầu',
     powerBy: 'Được hỗ trợ bởi',
+    workflow: {
+      thinking: 'Đang suy nghĩ…',
+      thought: 'Quá trình suy nghĩ',
+      thoughtFor: 'Đã suy nghĩ trong {{seconds}}',
+      failed: 'Quy trình công việc thất bại',
+    },
     aiNotice: {
       default: 'Nội dung này do AI tạo ra. Vui lòng kiểm chứng thông tin quan trọng.',
     },

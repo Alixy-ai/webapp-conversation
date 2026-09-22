@@ -9,6 +9,12 @@ const translation = {
     newChatDefaultName: '新しい会話',
     openingStatementTitle: 'オープニングステートメント',
     powerBy: '提供元',
+    workflow: {
+      thinking: '思考中…',
+      thought: '思考プロセス',
+      thoughtFor: '{{seconds}}間考えました',
+      failed: 'ワークフローが失敗しました',
+    },
     aiNotice: {
       default: 'このコンテンツは AI が生成しています。重要な情報はご自身でご確認ください。',
     },

@@ -12,6 +12,12 @@ const translation = {
     inputPlaceholder: '输入消息…',
     openingStatementTitle: '对话开场白',
     powerBy: 'Powered by',
+    workflow: {
+      thinking: '思考中…',
+      thought: '思考过程',
+      thoughtFor: '思考了 {{seconds}}',
+      failed: '工作流执行失败',
+    },
     aiNotice: {
       default: '本内容由 AI 生成，请注意甄别。',
     },
