@@ -9,6 +9,11 @@ const translation = {
     newChatDefaultName: '新しい会話',
     openingStatementTitle: 'オープニングステートメント',
     powerBy: '提供元',
+    renameConversation: '名前を変更',
+    deleteConversation: '削除',
+    deleteConfirmLabel: 'この会話を削除しますか？',
+    deleteConfirmYes: '削除',
+    deleteConfirmNo: '保持',
     workflow: {
       thinking: '思考中…',
       thought: '思考プロセス',

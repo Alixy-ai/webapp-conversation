@@ -9,7 +9,7 @@ import Toast from '@/app/components/base/toast'
 import Sidebar from '@/app/components/sidebar'
 import { Bars3Icon } from '@heroicons/react/24/outline'
 import ConfigSence from '@/app/components/config-scence'
-import { fetchAppParams, fetchChatList, fetchConversations, generationConversationName, sendChatMessage, updateFeedback } from '@/service'
+import { delConversation, fetchAppParams, fetchChatList, fetchConversations, generationConversationName, renameConversation, sendChatMessage, updateFeedback } from '@/service'
 import type { AppInfo, ChatItem, ConversationItem, Feedbacktype, PromptConfig, VisionFile, VisionSettings } from '@/types/app'
 import type { FileUpload } from '@/app/components/base/file-uploader-in-attachment/types'
 import { Resolution, TransferMethod, WorkflowRunningStatus } from '@/types/app'
@@ -666,12 +666,47 @@ const Main: FC<IMainProps> = ({ app }: IMainProps) => {
     notify({ type: 'success', message: t('common.api.success') })
   }
 
+  const handleRenameConversation = async (id: string, name: string) => {
+    try {
+      await renameConversation(id, name)
+      const { data: allConversations }: any = await fetchConversations()
+      setConversationList(allConversations)
+      if (currConversationInfo && currConversationId === id) {
+        // keep the header in sync when the open conversation is the renamed one
+        setExistConversationInfo({ ...currConversationInfo, name })
+      }
+    }
+    catch (e: any) {
+      notify({ type: 'error', message: e?.message || 'Rename failed' })
+    }
+  }
+
+  const handleDeleteConversation = async (id: string) => {
+    try {
+      await delConversation(id)
+      const { data: allConversations }: any = await fetchConversations()
+      setConversationList(allConversations)
+      if (currConversationId === id) {
+        // deleted the open conversation: fall back to a fresh chat
+        setCurrConversationId('-1', app.id, false)
+        setConversationIdChangeBecauseOfNew(true)
+        setChatList(generateNewChatListWithOpenStatement())
+        if (isMobile) { hideSidebar() }
+      }
+    }
+    catch (e: any) {
+      notify({ type: 'error', message: e?.message || 'Delete failed' })
+    }
+  }
+
   const renderSidebar = () => {
     if (!promptConfig) { return null }
     return (
       <Sidebar
         list={conversationList}
         onCurrentIdChange={handleConversationIdChange}
+        onRename={handleRenameConversation}
+        onDelete={handleDeleteConversation}
         currentId={currConversationId}
         copyRight={appInfo.copyright || appInfo.title}
         collapsed={isSidebarCollapsed}

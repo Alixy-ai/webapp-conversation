@@ -12,6 +12,11 @@ const translation = {
     inputPlaceholder: 'Send a message…',
     openingStatementTitle: 'Opening statement',
     powerBy: 'Powered by',
+    renameConversation: 'Rename',
+    deleteConversation: 'Delete',
+    deleteConfirmLabel: 'Delete this conversation?',
+    deleteConfirmYes: 'Delete',
+    deleteConfirmNo: 'Keep',
     workflow: {
       thinking: 'Thinking…',
       thought: 'Thought process',

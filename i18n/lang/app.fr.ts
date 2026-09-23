@@ -9,6 +9,11 @@ const translation = {
     newChatDefaultName: 'Nouvelle conversation',
     openingStatementTitle: 'Phrase d\'ouverture',
     powerBy: 'Propulsé par',
+    renameConversation: 'Renommer',
+    deleteConversation: 'Supprimer',
+    deleteConfirmLabel: 'Supprimer cette conversation ?',
+    deleteConfirmYes: 'Supprimer',
+    deleteConfirmNo: 'Conserver',
     workflow: {
       thinking: 'Réflexion…',
       thought: 'Processus de réflexion',

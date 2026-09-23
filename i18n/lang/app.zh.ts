@@ -12,6 +12,11 @@ const translation = {
     inputPlaceholder: '输入消息…',
     openingStatementTitle: '对话开场白',
     powerBy: 'Powered by',
+    renameConversation: '重命名',
+    deleteConversation: '删除',
+    deleteConfirmLabel: '删除该对话？',
+    deleteConfirmYes: '删除',
+    deleteConfirmNo: '保留',
     workflow: {
       thinking: '思考中…',
       thought: '思考过程',

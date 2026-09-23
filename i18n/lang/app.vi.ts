@@ -9,6 +9,11 @@ const translation = {
     newChatDefaultName: 'Cuộc trò chuyện mới',
     openingStatementTitle: 'Lời mở đầu',
     powerBy: 'Được hỗ trợ bởi',
+    renameConversation: 'Đổi tên',
+    deleteConversation: 'Xóa',
+    deleteConfirmLabel: 'Xóa cuộc trò chuyện này?',
+    deleteConfirmYes: 'Xóa',
+    deleteConfirmNo: 'Giữ lại',
     workflow: {
       thinking: 'Đang suy nghĩ…',
       thought: 'Quá trình suy nghĩ',
