@@ -24,6 +24,10 @@ CREATE TABLE IF NOT EXISTS apps (
   ai_notice_position TEXT NOT NULL DEFAULT 'input_hint',
   show_workflow_process INTEGER NOT NULL DEFAULT 1,
   workflow_display_mode TEXT NOT NULL DEFAULT 'full',
+  citation_enabled INTEGER NOT NULL DEFAULT 0,
+  citation_api_key TEXT NOT NULL DEFAULT '',
+  citation_api_url TEXT NOT NULL DEFAULT '',
+  citation_dataset_ids TEXT NOT NULL DEFAULT '[]',
   enabled INTEGER NOT NULL DEFAULT 1,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
@@ -39,6 +43,10 @@ const AI_NOTICE_COLUMNS: Array<[string, string]> = [
   ['ai_notice_position', 'TEXT NOT NULL DEFAULT \'input_hint\''],
   ['show_workflow_process', 'INTEGER NOT NULL DEFAULT 1'],
   ['workflow_display_mode', 'TEXT NOT NULL DEFAULT \'full\''],
+  ['citation_enabled', 'INTEGER NOT NULL DEFAULT 0'],
+  ['citation_api_key', 'TEXT NOT NULL DEFAULT \'\''],
+  ['citation_api_url', 'TEXT NOT NULL DEFAULT \'\''],
+  ['citation_dataset_ids', 'TEXT NOT NULL DEFAULT \'[]\''],
 ]
 
 /**

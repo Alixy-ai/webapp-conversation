@@ -1,9 +1,10 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import type { AppInput } from '@/lib/apps/types'
-import { toPublicApp } from '@/lib/apps/types'
+import { toAdminApp } from '@/lib/apps/types'
 import { guardAdminApi } from '@/lib/admin/auth'
 import { normalizeAiNotice } from '@/lib/apps/ai-notice'
+import { normalizeCitation, omitCitationFields } from '@/lib/apps/citation-config'
 import { deleteApp, getAppById, upsertApp } from '@/lib/apps/registry'
 
 export async function GET(request: NextRequest, { params }: {
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest, { params }: {
   const { id } = await params
   const app = getAppById(id)
   if (!app) { return NextResponse.json({ error: 'not found' }, { status: 404 }) }
-  return NextResponse.json(toPublicApp(app))
+  return NextResponse.json(toAdminApp(app))
 }
 
 export async function PUT(request: NextRequest, { params }: {
@@ -36,14 +37,17 @@ export async function PUT(request: NextRequest, { params }: {
   }
   const notice = normalizeAiNotice(body)
   if ('error' in notice) { return NextResponse.json({ error: notice.error }, { status: 400 }) }
+  const citation = normalizeCitation(body)
+  if ('error' in citation) { return NextResponse.json({ error: citation.error }, { status: 400 }) }
 
   // blank means "keep what is stored", so a partial update never wipes the key
   const rawApiKey: unknown = body.apiKey
   const rawApiUrl: unknown = body.apiUrl
   try {
     const app = upsertApp({
-      ...body,
+      ...omitCitationFields(body),
       ...notice.value,
+      ...citation.value,
       id,
       slug: rawSlug ?? existing.slug,
       apiKey: (typeof rawApiKey === 'string' ? rawApiKey.trim() : '') || existing.apiKey,
@@ -51,7 +55,7 @@ export async function PUT(request: NextRequest, { params }: {
         ? ''
         : ((typeof rawApiUrl === 'string' ? rawApiUrl.trim() : '') || existing.apiUrl),
     })
-    return NextResponse.json(toPublicApp(app))
+    return NextResponse.json(toAdminApp(app))
   }
   catch (e: any) {
     return NextResponse.json({ error: e?.message || 'failed to save app' }, { status: 400 })

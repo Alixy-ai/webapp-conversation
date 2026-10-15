@@ -10,6 +10,7 @@ import Sidebar from '@/app/components/sidebar'
 import { Bars3Icon } from '@heroicons/react/24/outline'
 import ConfigSence from '@/app/components/config-scence'
 import { delConversation, fetchAppParams, fetchChatList, fetchConversations, generationConversationName, renameConversation, sendChatMessage, updateFeedback } from '@/service'
+import { extractReasoning, isReasoningLabel, upsertReasoning } from '@/utils/reasoning'
 import type { AppInfo, ChatItem, ConversationItem, Feedbacktype, PromptConfig, VisionFile, VisionSettings } from '@/types/app'
 import type { FileUpload } from '@/app/components/base/file-uploader-in-attachment/types'
 import { Resolution, TransferMethod, WorkflowRunningStatus } from '@/types/app'
@@ -595,6 +596,17 @@ const Main: FC<IMainProps> = ({ app }: IMainProps) => {
           },
         ))
       },
+      onAgentLog: ({ data }) => {
+        // agent strategies stream each round's model "Thought" as an agent log
+        if (!responseItem.workflowProcess || data.status !== 'success' || !isReasoningLabel(data.label)) { return }
+        const text = extractReasoning(data.data?.output)
+        if (!text) { return }
+        responseItem.workflowProcess.reasoning = upsertReasoning(responseItem.workflowProcess.reasoning || [], { id: data.id, label: data.label, text })
+        setChatList(produce(getChatList(), (draft) => {
+          const currentIndex = draft.findIndex(item => item.id === responseItem.id)
+          if (currentIndex >= 0) { draft[currentIndex] = { ...draft[currentIndex], ...responseItem } }
+        }))
+      },
       onError() {
         setRespondingFalse()
         // role back placeholder answer
@@ -619,6 +631,15 @@ const Main: FC<IMainProps> = ({ app }: IMainProps) => {
       },
       onWorkflowFinished: ({ data }) => {
         responseItem.workflowProcess!.status = data.status as WorkflowRunningStatus
+        // the workflow-level total is authoritative: node elapsed times can
+        // be replaced by agent strategy sub-logs (agent_log events overwrite
+        // the agent node's tracing entry, dropping its elapsed_time), which
+        // made "Thought for 0s" appear. Prefer workflow_finished.elapsed_time,
+        // fall back to the sum of node times when the field is absent.
+        const workflowTotal = typeof (data as any).elapsed_time === 'number'
+          ? (data as any).elapsed_time
+          : responseItem.workflowProcess!.tracing!.reduce((sum, node) => sum + (node.elapsed_time || 0), 0)
+        ;(responseItem.workflowProcess as any).elapsedTime = workflowTotal
         setChatList(produce(getChatList(), (draft) => {
           const currentIndex = draft.findIndex(item => item.id === responseItem.id)
           draft[currentIndex] = {
@@ -640,6 +661,11 @@ const Main: FC<IMainProps> = ({ app }: IMainProps) => {
       onNodeFinished: ({ data }) => {
         const currentIndex = responseItem.workflowProcess!.tracing!.findIndex(item => item.node_id === data.node_id)
         responseItem.workflowProcess!.tracing[currentIndex] = data as any
+        // plain LLM nodes emit their reasoning inline as <think>…</think>
+        if (data.node_type === 'llm' && typeof data.outputs?.text === 'string' && /<think>/i.test(data.outputs.text)) {
+          const text = extractReasoning(data.outputs.text)
+          responseItem.workflowProcess!.reasoning = upsertReasoning(responseItem.workflowProcess!.reasoning || [], { id: data.id, label: (data as any).title || 'LLM', text })
+        }
         setChatList(produce(getChatList(), (draft) => {
           const currentIndex = draft.findIndex(item => item.id === responseItem.id)
           draft[currentIndex] = {

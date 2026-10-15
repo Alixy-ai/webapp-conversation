@@ -3,7 +3,7 @@
 import type { FC } from 'react'
 import React, { useEffect, useState } from 'react'
 import { RiCheckLine, RiCloseLine } from '@remixicon/react'
-import type { PublicApp } from '@/lib/apps/types'
+import type { AdminApp } from '@/lib/apps/types'
 import { AI_NOTICE_POSITIONS, AI_NOTICE_TEXT_MAX_LEN, API_PREFIX, DEFAULT_AI_NOTICE_POSITION, WORKFLOW_DISPLAY_MODES } from '@/config'
 import type { AiNoticePosition, WorkflowDisplayMode } from '@/config'
 
@@ -24,6 +24,15 @@ export interface AppFormValues {
   aiNoticeText: string
   aiNoticePosition: AiNoticePosition
   workflowDisplayMode: WorkflowDisplayMode
+  citationEnabled: boolean
+  /** blank = keep stored key */
+  citationApiKey: string
+  citationKeySet: boolean
+  /** user asked to remove the stored key */
+  citationKeyClear: boolean
+  citationApiUrl: string
+  /** comma / newline separated */
+  citationDatasetIds: string
   enabled: boolean
 }
 
@@ -44,10 +53,16 @@ export const emptyAppForm = (): AppFormValues => ({
   aiNoticeText: '',
   aiNoticePosition: DEFAULT_AI_NOTICE_POSITION,
   workflowDisplayMode: 'full',
+  citationEnabled: false,
+  citationApiKey: '',
+  citationKeySet: false,
+  citationKeyClear: false,
+  citationApiUrl: '',
+  citationDatasetIds: '',
   enabled: true,
 })
 
-export const appToForm = (app: PublicApp): AppFormValues => ({
+export const appToForm = (app: AdminApp): AppFormValues => ({
   id: app.id,
   slug: app.slug,
   name: app.name,
@@ -64,6 +79,12 @@ export const appToForm = (app: PublicApp): AppFormValues => ({
   aiNoticeText: app.aiNoticeText,
   aiNoticePosition: app.aiNoticePosition,
   workflowDisplayMode: app.workflowDisplayMode,
+  citationEnabled: app.citationEnabled,
+  citationApiKey: '',
+  citationKeySet: app.citationKeySet,
+  citationKeyClear: false,
+  citationApiUrl: app.citationApiUrl,
+  citationDatasetIds: app.citationDatasetIds.join('\n'),
   enabled: app.enabled,
 })
 
@@ -77,12 +98,14 @@ export const AI_NOTICE_POSITION_LABELS: Record<AiNoticePosition, string> = {
 
 export const WORKFLOW_MODE_LABELS: Record<WorkflowDisplayMode, string> = {
   full: 'Full trace — every step with its details',
+  reasoning: 'Reasoning only — the model\'s thinking text, no steps or tools',
   names: 'Node names only — one scrolling status line, frozen once the answer starts',
   off: 'Hidden — only the thinking state',
 }
 
 const WORKFLOW_MODE_DESCRIPTIONS: Record<WorkflowDisplayMode, string> = {
   full: 'The full Codex-style collapsible step list, expandable per node.',
+  reasoning: 'A Codex-style collapsible panel showing only the model\'s reasoning text (from <think> blocks / agent thoughts); no node list or tool output.',
   names: 'A single line that cycles through the node names as they run; it stops cycling and freezes as soon as the answer text starts streaming.',
   off: 'Visitors only ever see the thinking/waiting header.',
 }
@@ -127,6 +150,10 @@ const AppDialog: FC<AppDialogProps> = ({
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
     if (busy) { return }
+    if (form.citationEnabled && !form.citationApiKey.trim() && (!form.citationKeySet || form.citationKeyClear)) {
+      setError('Citations need a Knowledge API key (dataset-…).')
+      return
+    }
     // a new app is unreachable without a key; editing keeps the stored one
     if (!lockId && !form.apiKey.trim()) {
       setError('The API key is required to connect a new app.')
@@ -150,8 +177,13 @@ const AppDialog: FC<AppDialogProps> = ({
       aiNoticeText: form.aiNoticeText.trim(),
       aiNoticePosition: form.aiNoticePosition,
       workflowDisplayMode: form.workflowDisplayMode,
+      citationEnabled: form.citationEnabled,
+      citationApiUrl: form.citationApiUrl.trim() || null,
+      citationDatasetIds: form.citationDatasetIds,
       enabled: form.enabled,
     }
+    if (form.citationApiKey.trim()) { body.citationApiKey = form.citationApiKey.trim() }
+    else if (form.citationKeyClear) { body.citationApiKey = null }
     // blank means "keep what is stored" — the key never leaves the server
     if (form.apiKey) { body.apiKey = form.apiKey }
     if (form.apiUrl) { body.apiUrl = form.apiUrl }
@@ -348,6 +380,71 @@ const AppDialog: FC<AppDialogProps> = ({
             <p className='mt-1.5 text-[11px] leading-4 text-gray-400'>
               {WORKFLOW_MODE_DESCRIPTIONS[form.workflowDisplayMode]}
             </p>
+          </div>
+
+          <p className='mt-6 text-[11px] font-medium uppercase tracking-wide text-gray-400'>Knowledge citations</p>
+          <div className='mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2'>
+            <div className='sm:col-span-2'>
+              <label className='flex items-center gap-2 text-xs text-gray-600'>
+                <input
+                  type='checkbox'
+                  className='h-3.5 w-3.5 rounded border-gray-300'
+                  checked={form.citationEnabled}
+                  onChange={e => set('citationEnabled', e.target.checked)}
+                />
+                Show the knowledge segments an answer cites
+              </label>
+              <p className='mt-1 text-[11px] leading-4 text-gray-400'>
+                The workflow must append <code>[S:&lt;segment_id&gt;]</code> (full id or first 8 chars) after cited facts.
+                Markers are resolved on the server with the Knowledge API; unknown ones are dropped.
+              </p>
+            </div>
+            <div>
+              <label className={label} htmlFor='app-citation-key'>Knowledge API key</label>
+              <input
+                id='app-citation-key'
+                type='password'
+                className={`${input} disabled:bg-gray-50 disabled:text-gray-400`}
+                value={form.citationApiKey}
+                disabled={!form.citationEnabled}
+                onChange={e => setForm(prev => ({ ...prev, citationApiKey: e.target.value, citationKeyClear: false }))}
+                placeholder={form.citationKeySet && !form.citationKeyClear ? 'unchanged (stored)' : 'dataset-…'}
+              />
+              {form.citationKeySet && (
+                <label className='mt-1 flex items-center gap-1.5 text-[11px] text-gray-400'>
+                  <input
+                    type='checkbox'
+                    className='h-3 w-3 rounded border-gray-300'
+                    checked={form.citationKeyClear}
+                    onChange={e => set('citationKeyClear', e.target.checked)}
+                  />
+                  Remove the stored key
+                </label>
+              )}
+            </div>
+            <div>
+              <label className={label} htmlFor='app-citation-url'>Knowledge API base URL</label>
+              <input
+                id='app-citation-url'
+                className={`${input} disabled:bg-gray-50 disabled:text-gray-400`}
+                value={form.citationApiUrl}
+                disabled={!form.citationEnabled}
+                onChange={e => set('citationApiUrl', e.target.value)}
+                placeholder='empty = same as API base URL'
+              />
+            </div>
+            <div className='sm:col-span-2'>
+              <label className={label} htmlFor='app-citation-datasets'>Knowledge base ids</label>
+              <textarea
+                id='app-citation-datasets'
+                rows={2}
+                className={`${input} resize-y font-mono text-xs disabled:bg-gray-50 disabled:text-gray-400`}
+                value={form.citationDatasetIds}
+                disabled={!form.citationEnabled}
+                onChange={e => set('citationDatasetIds', e.target.value)}
+                placeholder='one per line; empty = every knowledge base the key can access'
+              />
+            </div>
           </div>
 
           {

@@ -7,13 +7,14 @@ import { RiArrowRightSLine } from '@remixicon/react'
 import NodePanel from './node'
 import type { WorkflowProcess } from '@/types/app'
 import { WorkflowRunningStatus } from '@/types/app'
+import type { WorkflowDisplayMode } from '@/config'
 
 interface WorkflowProcessProps {
   data: WorkflowProcess
   expand?: boolean
   hideInfo?: boolean
-  /** display mode from the app config: full / names / off */
-  displayMode?: 'full' | 'names' | 'off'
+  /** display mode from the app config; 'reasoning' is rendered by <Reasoning /> instead */
+  displayMode?: WorkflowDisplayMode
   /** true once the answer text itself starts streaming; freezes the ticker */
   answerStarted?: boolean
 }
@@ -59,13 +60,16 @@ const WorkflowProcessItem: FC<WorkflowProcessProps> = ({
   }, [running, showDetail])
 
   const elapsed = useMemo(() => {
+    // prefer the workflow-level total; the node sum can under-report when
+    // agent strategy logs overwrite a node's tracing entry
+    if (typeof data.elapsedTime === 'number' && data.elapsedTime > 0) { return formatElapsed(data.elapsedTime) }
     const runningNode = data.tracing.find(node => node.status === 'running')
     if (runningNode && runningNode.elapsed_time) { return formatElapsed(runningNode.elapsed_time) }
     const last = data.tracing[data.tracing.length - 1]
     if (!last) { return '' }
     const total = data.tracing.reduce((sum, node) => sum + (node.elapsed_time || 0), 0)
     return formatElapsed(total)
-  }, [data.tracing])
+  }, [data.tracing, data.elapsedTime])
 
   const headerText = running
     ? t('app.chat.workflow.thinking')

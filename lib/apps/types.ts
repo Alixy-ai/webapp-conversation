@@ -19,6 +19,14 @@ export interface AppRecord {
   aiNoticePosition: AiNoticePosition
   /** how the workflow/tool trace under answers is rendered: full / names / off */
   workflowDisplayMode: WorkflowDisplayMode
+  /** resolve `[S:<segment_id>]` markers in answers into knowledge citations */
+  citationEnabled: boolean
+  /** Dify Knowledge API key (`dataset-…`), server-side only */
+  citationApiKey: string
+  /** Knowledge API base URL, '' = same as apiUrl */
+  citationApiUrl: string
+  /** knowledge bases to index, [] = every dataset the key can see */
+  citationDatasetIds: string[]
   enabled: boolean
   createdAt: number
   updatedAt: number
@@ -52,6 +60,8 @@ export interface PublicApp {
   aiNoticePosition: AiNoticePosition
   /** how the workflow/tool trace under answers is rendered: full / names / off */
   workflowDisplayMode: WorkflowDisplayMode
+  /** show knowledge citations under answers */
+  citationEnabled: boolean
   /** only the admin UI cares; the public pages filter disabled apps out */
   enabled: boolean
   /** epoch ms, shown in the admin table */
@@ -74,6 +84,21 @@ export const toPublicApp = (app: AppRecord): PublicApp => ({
   aiNoticeText: app.aiNoticeText,
   aiNoticePosition: app.aiNoticePosition,
   workflowDisplayMode: app.workflowDisplayMode,
+  citationEnabled: app.citationEnabled,
   enabled: app.enabled,
   updatedAt: app.updatedAt,
+})
+
+/** Admin views: adds non-secret citation settings, still never the keys. */
+export interface AdminApp extends PublicApp {
+  citationKeySet: boolean
+  citationApiUrl: string
+  citationDatasetIds: string[]
+}
+
+export const toAdminApp = (app: AppRecord): AdminApp => ({
+  ...toPublicApp(app),
+  citationKeySet: !!app.citationApiKey,
+  citationApiUrl: app.citationApiUrl,
+  citationDatasetIds: app.citationDatasetIds,
 })

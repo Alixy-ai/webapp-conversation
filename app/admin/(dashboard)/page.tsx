@@ -10,7 +10,7 @@ import RowActions from './_components/row-actions'
 import SearchInput from './_components/search-input'
 import { RowCheckbox, SelectAllCheckbox, SelectionProvider } from './_components/selection'
 import { countApps, ensureAppsSeeded, queryApps } from '@/lib/apps/registry'
-import { toPublicApp } from '@/lib/apps/types'
+import { toAdminApp } from '@/lib/apps/types'
 
 const DEFAULT_PAGE_SIZE = 10
 
@@ -68,7 +68,7 @@ const AdminPage: FC<IAdminPageProps> = async ({ searchParams }) => {
     page: requestedPage,
     pageSize: requestedSize,
   })
-  const rows = apps.map(toPublicApp)
+  const rows = apps.map(toAdminApp)
   const ids = rows.map(app => app.id)
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1
   const to = Math.min(page * pageSize, total)

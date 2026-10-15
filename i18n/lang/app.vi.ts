@@ -20,6 +20,12 @@ const translation = {
       thoughtFor: 'Đã suy nghĩ trong {{seconds}}',
       failed: 'Quy trình công việc thất bại',
     },
+    citation: {
+      title: 'Nguồn tham khảo',
+      segment: 'Đoạn #{{position}}',
+      words: '{{count}} từ',
+      hits: '{{count}} lượt khớp',
+    },
     aiNotice: {
       default: 'Nội dung này do AI tạo ra. Vui lòng kiểm chứng thông tin quan trọng.',
     },

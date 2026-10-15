@@ -218,9 +218,22 @@ export enum WorkflowRunningStatus {
   Stopped = 'stopped',
 }
 
+/** One block of model reasoning (`<think>…</think>` / reasoning_content). */
+export interface ReasoningStep {
+  /** agent log id or node execution id */
+  id: string
+  /** where it came from, e.g. "deepseek-flash Thought" or a node title */
+  label: string
+  text: string
+}
+
 export interface WorkflowProcess {
   status: WorkflowRunningStatus
   tracing: NodeTracing[]
+  /** model reasoning collected while the workflow ran */
+  reasoning?: ReasoningStep[]
+  /** workflow-level elapsed seconds from `workflow_finished`, authoritative over the node sum */
+  elapsedTime?: number
   expand?: boolean // for UI
 }
 

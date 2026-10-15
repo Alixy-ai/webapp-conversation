@@ -6,12 +6,12 @@ import { useRouter } from 'next/navigation'
 import { RiDeleteBinLine, RiEditLine } from '@remixicon/react'
 
 import AppDialog, { appToForm } from './app-dialog'
-import type { PublicApp } from '@/lib/apps/types'
+import type { AdminApp } from '@/lib/apps/types'
 import { API_PREFIX } from '@/config'
 
 const action = 'flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50'
 
-const RowActions: FC<{ app: PublicApp }> = ({ app }) => {
+const RowActions: FC<{ app: AdminApp }> = ({ app }) => {
   const router = useRouter()
   const [editing, setEditing] = useState(false)
   const [confirming, setConfirming] = useState(false)

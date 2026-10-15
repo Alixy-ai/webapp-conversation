@@ -160,3 +160,86 @@ a {
   mask-image: linear-gradient(to bottom, transparent 0, black 12%, black 88%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 12%, black 88%, transparent 100%);
 }
+
+/* ── Assistant answer readability (streamdown markdown) ────────────────── */
+.streamdown-markdown {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #1f2937;
+  word-break: break-word;
+}
+.streamdown-markdown > :first-child { margin-top: 0; }
+.streamdown-markdown > :last-child { margin-bottom: 0; }
+.streamdown-markdown p { margin: 0.5em 0; }
+.streamdown-markdown ul,
+.streamdown-markdown ol { margin: 0.5em 0; padding-left: 1.4em; }
+.streamdown-markdown li { margin: 0.2em 0; }
+.streamdown-markdown li > ul,
+.streamdown-markdown li > ol { margin: 0.2em 0; }
+.streamdown-markdown h1,
+.streamdown-markdown h2,
+.streamdown-markdown h3 { margin: 0.9em 0 0.4em; font-weight: 600; line-height: 1.35; }
+.streamdown-markdown h1 { font-size: 1.3em; }
+.streamdown-markdown h2 { font-size: 1.15em; }
+.streamdown-markdown h3 { font-size: 1.03em; }
+.streamdown-markdown a { color: #0034ff; text-decoration: underline; text-underline-offset: 2px; }
+.streamdown-markdown code {
+  font-size: 0.86em;
+  background: #f3f4f6;
+  padding: 0.12em 0.36em;
+  border-radius: 5px;
+}
+.streamdown-markdown pre {
+  margin: 0.7em 0;
+  border-radius: 10px;
+  font-size: 0.86em;
+}
+.streamdown-markdown pre code { background: transparent; padding: 0; }
+.streamdown-markdown blockquote {
+  margin: 0.6em 0;
+  padding-left: 0.9em;
+  border-left: 3px solid #e5e7eb;
+  color: #6b7280;
+}
+.streamdown-markdown table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 0.7em 0;
+  font-size: 0.9em;
+}
+.streamdown-markdown th,
+.streamdown-markdown td { border: 1px solid #e5e7eb; padding: 0.4em 0.6em; text-align: left; }
+.streamdown-markdown th { background: #f9fafb; font-weight: 600; }
+.streamdown-markdown hr { margin: 1em 0; border: 0; border-top: 1px solid #eceef1; }
+
+/* ── Question bubble: the same markdown on a dark surface ──────────────── */
+.question-bubble .streamdown-markdown { color: rgba(255, 255, 255, 0.92); }
+.question-bubble .streamdown-markdown a { color: #7dd3fc; text-decoration-color: rgba(125, 211, 252, 0.4); }
+.question-bubble .streamdown-markdown code {
+  background: rgba(255, 255, 255, 0.14);
+  color: #f9fafb;
+}
+.question-bubble .streamdown-markdown pre {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.question-bubble .streamdown-markdown pre code { background: transparent; color: inherit; }
+.question-bubble .streamdown-markdown blockquote {
+  border-left-color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.72);
+}
+.question-bubble .streamdown-markdown th,
+.question-bubble .streamdown-markdown td { border-color: rgba(255, 255, 255, 0.16); }
+.question-bubble .streamdown-markdown th { background: rgba(255, 255, 255, 0.08); }
+.question-bubble .streamdown-markdown hr { border-top-color: rgba(255, 255, 255, 0.16); }
+
+/* ── Chat message entrance ─────────────────────────────────────────────── */
+@keyframes msg-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.msg-rise { animation: msg-rise 0.26s cubic-bezier(0.22, 0.8, 0.3, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .msg-rise { animation: none; }
+}

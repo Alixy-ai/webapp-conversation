@@ -25,9 +25,9 @@ const Question: FC<IQuestionProps> = ({ id, content, useCurrentUserAvatar, files
   const otherFiles = files.filter(file => file.type !== 'image')
 
   return (
-    <div className='flex gap-3 items-start justify-end' key={id}>
+    <div className='flex gap-3 items-start justify-end msg-rise' key={id}>
       <div className='flex flex-col items-end max-w-[85%]'>
-        <div className='px-4 py-2.5 bg-gray-900 text-white text-sm rounded-2xl rounded-br-md'>
+        <div className='question-bubble px-4 py-2.5 bg-gray-900 text-white text-sm rounded-2xl rounded-br-md'>
           {imageSrcs.length > 0 && (
             <ImageGallery srcs={imageSrcs} />
           )}

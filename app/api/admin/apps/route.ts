@@ -1,9 +1,10 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import type { AppInput } from '@/lib/apps/types'
-import { toPublicApp } from '@/lib/apps/types'
+import { toAdminApp } from '@/lib/apps/types'
 import { guardAdminApi } from '@/lib/admin/auth'
 import { normalizeAiNotice } from '@/lib/apps/ai-notice'
+import { normalizeCitation, omitCitationFields } from '@/lib/apps/citation-config'
 import { ensureAppsSeeded, getAppById, listApps, upsertApp } from '@/lib/apps/registry'
 
 export async function GET(request: NextRequest) {
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
   if (denied) { return denied }
 
   await ensureAppsSeeded()
-  return NextResponse.json(listApps(true).map(toPublicApp))
+  return NextResponse.json(listApps(true).map(toAdminApp))
 }
 
 export async function POST(request: NextRequest) {
@@ -50,10 +51,12 @@ export async function POST(request: NextRequest) {
 
   const notice = normalizeAiNotice(body)
   if ('error' in notice) { return NextResponse.json({ error: notice.error }, { status: 400 }) }
+  const citation = normalizeCitation(body)
+  if ('error' in citation) { return NextResponse.json({ error: citation.error }, { status: 400 }) }
 
   try {
-    const app = upsertApp({ ...body, ...notice.value, id, slug, apiKey, apiUrl })
-    return NextResponse.json(toPublicApp(app), { status: 201 })
+    const app = upsertApp({ ...omitCitationFields(body), ...notice.value, ...citation.value, id, slug, apiKey, apiUrl })
+    return NextResponse.json(toAdminApp(app), { status: 201 })
   }
   catch (e: any) {
     // UNIQUE constraint on slug

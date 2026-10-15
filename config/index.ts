@@ -48,7 +48,7 @@ export const isAiNoticePosition = (value: unknown): value is AiNoticePosition =>
 
 // ── Workflow process display ───────────────────────────────────────────
 /** How the workflow/tool trace under answers is rendered for an app. */
-export const WORKFLOW_DISPLAY_MODES = ['full', 'names', 'off'] as const
+export const WORKFLOW_DISPLAY_MODES = ['full', 'reasoning', 'names', 'off'] as const
 export type WorkflowDisplayMode = typeof WORKFLOW_DISPLAY_MODES[number]
 export const DEFAULT_WORKFLOW_DISPLAY_MODE: WorkflowDisplayMode = 'full'
 /** accepts the new enum or the legacy boolean switch */

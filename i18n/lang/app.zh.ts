@@ -23,6 +23,12 @@ const translation = {
       thoughtFor: '思考了 {{seconds}}',
       failed: '工作流执行失败',
     },
+    citation: {
+      title: '引用来源',
+      segment: '分段 #{{position}}',
+      words: '{{count}} 字',
+      hits: '命中 {{count}} 次',
+    },
     aiNotice: {
       default: '本内容由 AI 生成，请注意甄别。',
     },

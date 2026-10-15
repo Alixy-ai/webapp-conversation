@@ -23,6 +23,12 @@ const translation = {
       thoughtFor: 'Thought for {{seconds}}',
       failed: 'Workflow failed',
     },
+    citation: {
+      title: 'Sources',
+      segment: 'Segment #{{position}}',
+      words: '{{count}} words',
+      hits: '{{count}} hits',
+    },
     aiNotice: {
       default: 'This content is AI generated. Please verify important information.',
     },

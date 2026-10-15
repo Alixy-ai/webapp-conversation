@@ -73,6 +73,22 @@ export interface NodeStartedResponse {
   }
 }
 
+export interface AgentLogResponse {
+  task_id: string
+  event: string
+  data: {
+    id: string
+    node_id: string
+    node_execution_id: string
+    parent_id?: string | null
+    label: string
+    status: string
+    error?: string | null
+    data: any
+    metadata?: any
+  }
+}
+
 export interface NodeFinishedResponse {
   task_id: string
   workflow_run_id: string
@@ -118,6 +134,7 @@ export type IOnWorkflowStarted = (workflowStarted: WorkflowStartedResponse) => v
 export type IOnWorkflowFinished = (workflowFinished: WorkflowFinishedResponse) => void
 export type IOnNodeStarted = (nodeStarted: NodeStartedResponse) => void
 export type IOnNodeFinished = (nodeFinished: NodeFinishedResponse) => void
+export type IOnAgentLog = (agentLog: AgentLogResponse) => void
 
 interface IOtherOptions {
   isPublicAPI?: boolean
@@ -136,6 +153,7 @@ interface IOtherOptions {
   onWorkflowFinished?: IOnWorkflowFinished
   onNodeStarted?: IOnNodeStarted
   onNodeFinished?: IOnNodeFinished
+  onAgentLog?: IOnAgentLog
 }
 
 function unicodeToChar(text: string) {
@@ -156,6 +174,7 @@ const handleStream = (
   onWorkflowFinished?: IOnWorkflowFinished,
   onNodeStarted?: IOnNodeStarted,
   onNodeFinished?: IOnNodeFinished,
+  onAgentLog?: IOnAgentLog,
 ) => {
   if (!response.ok) { throw new Error('Network response was not ok') }
 
@@ -230,6 +249,9 @@ const handleStream = (
             }
             else if (bufferObj.event === 'node_finished') {
               onNodeFinished?.(bufferObj as NodeFinishedResponse)
+            }
+            else if (bufferObj.event === 'agent_log') {
+              onAgentLog?.(bufferObj as AgentLogResponse)
             }
           }
         })
@@ -372,6 +394,7 @@ export const ssePost = (
     onWorkflowFinished,
     onNodeStarted,
     onNodeFinished,
+    onAgentLog,
     onError,
   }: IOtherOptions,
 ) => {
@@ -405,7 +428,7 @@ export const ssePost = (
         onData?.(str, isFirstMessage, moreInfo)
       }, () => {
         onCompleted?.()
-      }, onThought, onMessageEnd, onMessageReplace, onFile, onWorkflowStarted, onWorkflowFinished, onNodeStarted, onNodeFinished)
+      }, onThought, onMessageEnd, onMessageReplace, onFile, onWorkflowStarted, onWorkflowFinished, onNodeStarted, onNodeFinished, onAgentLog)
     })
     .catch((e) => {
       Toast.notify({ type: 'error', message: e })

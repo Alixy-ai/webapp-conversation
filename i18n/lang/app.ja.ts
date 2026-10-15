@@ -20,6 +20,12 @@ const translation = {
       thoughtFor: '{{seconds}}間考えました',
       failed: 'ワークフローが失敗しました',
     },
+    citation: {
+      title: '引用元',
+      segment: 'セグメント #{{position}}',
+      words: '{{count}} 文字',
+      hits: 'ヒット {{count}} 回',
+    },
     aiNotice: {
       default: 'このコンテンツは AI が生成しています。重要な情報はご自身でご確認ください。',
     },

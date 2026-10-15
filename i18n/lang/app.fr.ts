@@ -20,6 +20,12 @@ const translation = {
       thoughtFor: 'A réfléchi pendant {{seconds}}',
       failed: 'Le flux de travail a échoué',
     },
+    citation: {
+      title: 'Sources',
+      segment: 'Segment n°{{position}}',
+      words: '{{count}} mots',
+      hits: '{{count}} correspondances',
+    },
     aiNotice: {
       default: 'Ce contenu est généré par l\'IA. Veuillez vérifier les informations importantes.',
     },
